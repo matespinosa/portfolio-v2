@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { chatSuggestions } from '../data/profile'
 import { projects } from '../data/projects'
 import { answerPortfolioQuestion } from '../lib/portfolioAssistant'
+import { requestPortfolioAnswer, serializeChatHistory } from '../lib/portfolioChatApi'
 
 const SUGGESTION_LABELS = ['Fintech products', 'Frontend practice', 'Current role at Rappi']
 
@@ -14,6 +15,9 @@ export default function PortfolioChat({ onOpenProject }) {
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
   const [panelOpen, setPanelOpen] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [assistantStatus, setAssistantStatus] = useState({ label: 'Hybrid · Ready', state: 'ready' })
+  const [remainingRequests, setRemainingRequests] = useState(null)
   const inputRef = useRef(null)
   const transcriptRef = useRef(null)
   const launcherRef = useRef(null)
@@ -67,12 +71,36 @@ export default function PortfolioChat({ onOpenProject }) {
     input.style.overflowY = input.scrollHeight > 112 ? 'auto' : 'hidden'
   }, [draft, isInitial])
 
-  const ask = useCallback((question) => {
+  const ask = useCallback(async (question) => {
     const content = question.trim()
-    if (!content) return
+    if (!content || isSending) return
 
-    const answer = answerPortfolioQuestion(content)
+    const fallback = answerPortfolioQuestion(content)
+    const history = serializeChatHistory(messages)
+    const canAnswerLocally = history.length === 0 && fallback.confidence === 'high'
     const userMessage = { id: makeId(), role: 'user', content }
+
+    shouldFollowRef.current = true
+    setMessages((current) => [...current, userMessage])
+    setDraft('')
+    setIsSending(true)
+    setAssistantStatus({
+      label: canAnswerLocally ? 'Local · Thinking' : 'Gemini · Thinking',
+      state: 'thinking',
+    })
+    window.requestAnimationFrame(() => setPanelOpen(true))
+
+    let answer
+    if (canAnswerLocally) {
+      answer = { ...fallback, source: 'local', reason: 'deterministic' }
+    } else {
+      try {
+        answer = await requestPortfolioAnswer({ question: content, history })
+      } catch {
+        answer = { ...fallback, source: 'local', reason: 'offline' }
+      }
+    }
+
     const assistantMessage = {
       id: makeId(),
       role: 'assistant',
@@ -83,11 +111,26 @@ export default function PortfolioChat({ onOpenProject }) {
       suggestions: answer.suggestions,
     }
 
-    shouldFollowRef.current = true
-    setMessages((current) => [...current, userMessage, assistantMessage])
-    setDraft('')
-    window.requestAnimationFrame(() => setPanelOpen(true))
-  }, [])
+    setMessages((current) => [...current, assistantMessage])
+    if (Number.isInteger(answer.remaining)) setRemainingRequests(answer.remaining)
+
+    if (answer.source === 'gemini') {
+      setAssistantStatus({
+        label: `Gemini · ${answer.remaining} left today`,
+        state: 'ready',
+      })
+    } else if (answer.reason?.includes('daily-limit')) {
+      setAssistantStatus({ label: 'Local · Daily limit', state: 'limited' })
+    } else if (['configuration', 'rate-limit-unavailable'].includes(answer.reason)) {
+      setAssistantStatus({ label: 'Local · Setup incomplete', state: 'limited' })
+    } else if (['offline', 'gemini-unavailable'].includes(answer.reason)) {
+      setAssistantStatus({ label: 'Local · Offline', state: 'limited' })
+    } else {
+      setAssistantStatus({ label: 'Local · Ready', state: 'ready' })
+    }
+
+    setIsSending(false)
+  }, [isSending, messages])
 
   const renderComposer = (mode) => {
     const starter = mode === 'starter'
@@ -110,6 +153,7 @@ export default function PortfolioChat({ onOpenProject }) {
             rows={starter ? 3 : 1}
             maxLength="1200"
             value={draft}
+            disabled={isSending}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -127,7 +171,12 @@ export default function PortfolioChat({ onOpenProject }) {
                 aria-label="Suggested questions"
               >
                 {chatSuggestions.map((suggestion, index) => (
-                  <button type="button" key={suggestion} onClick={() => ask(suggestion)}>
+                  <button
+                    type="button"
+                    key={suggestion}
+                    onClick={() => ask(suggestion)}
+                    disabled={isSending}
+                  >
                     {SUGGESTION_LABELS[index] || suggestion}
                   </button>
                 ))}
@@ -142,14 +191,16 @@ export default function PortfolioChat({ onOpenProject }) {
               className="portfolio-chat__send"
               type="submit"
               aria-label="Send message"
-              disabled={!draft.trim()}
+              disabled={isSending || !draft.trim()}
             >
-              Send
+              {isSending ? 'Thinking…' : 'Send'}
             </button>
           </div>
         </form>
         <footer className="portfolio-chat__meta">
-          Respuestas construidas únicamente con el contenido de este portafolio
+          {remainingRequests === null
+            ? 'Respuestas construidas únicamente con el contenido de este portafolio'
+            : `${remainingRequests} consultas de Gemini disponibles hoy · respaldo local siempre activo`}
         </footer>
       </div>
     )
@@ -223,11 +274,11 @@ export default function PortfolioChat({ onOpenProject }) {
                 <div className="portfolio-chat__header-actions">
                   <span
                     className="portfolio-chat__state"
-                    data-state="ready"
+                    data-state={assistantStatus.state}
                     role="status"
                     aria-atomic="true"
                   >
-                    <i aria-hidden="true" /> Local · Ready
+                    <i aria-hidden="true" /> {assistantStatus.label}
                   </span>
                   <button
                     type="button"
@@ -310,7 +361,12 @@ export default function PortfolioChat({ onOpenProject }) {
                             }
                           >
                             {message.suggestions.map((suggestion) => (
-                              <button type="button" key={suggestion} onClick={() => ask(suggestion)}>
+                              <button
+                                type="button"
+                                key={suggestion}
+                                onClick={() => ask(suggestion)}
+                                disabled={isSending}
+                              >
                                 {suggestion}
                               </button>
                             ))}
@@ -319,6 +375,20 @@ export default function PortfolioChat({ onOpenProject }) {
                     </div>
                   </article>
                 ))}
+                {isSending && (
+                  <article
+                    className="portfolio-chat__message portfolio-chat__message--pending"
+                    data-role="assistant"
+                  >
+                    <span className="portfolio-chat__avatar" aria-hidden="true">
+                      <img src="/favicon.svg" alt="" />
+                    </span>
+                    <div className="portfolio-chat__message-content">
+                      <span className="portfolio-chat__message-author">Mateo portfolio guide</span>
+                      <p role="status">Connecting the question with the portfolio context…</p>
+                    </div>
+                  </article>
+                )}
               </div>
 
               {renderComposer('conversation')}

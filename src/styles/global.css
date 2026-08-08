@@ -1575,6 +1575,14 @@ body[data-cursor-mode="label"] .cursor-dot {
   background: var(--signal);
 }
 
+.portfolio-chat__state[data-state="thinking"] i {
+  animation: pulse 1.2s var(--ease-out) infinite;
+}
+
+.portfolio-chat__state[data-state="limited"] i {
+  background: var(--muted);
+}
+
 .portfolio-chat__transcript {
   min-height: 15rem;
   max-height: none;
@@ -1649,6 +1657,17 @@ body[data-cursor-mode="label"] .cursor-dot {
 .portfolio-chat__message[data-role="user"] p {
   font-size: 0.9rem;
   line-height: 1.55;
+}
+
+.portfolio-chat__message--pending .portfolio-chat__message-content p {
+  color: var(--muted);
+  animation: chat-pending 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes chat-pending {
+  to {
+    opacity: 0.45;
+  }
 }
 
 .portfolio-chat__project-actions,
@@ -1741,6 +1760,17 @@ body[data-cursor-mode="label"] .cursor-dot {
 
 .portfolio-chat__suggestions button:active {
   transform: translateY(0);
+}
+
+.portfolio-chat__suggestions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.portfolio-chat__followups button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .portfolio-chat__form {

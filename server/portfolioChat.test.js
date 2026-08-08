@@ -1,0 +1,141 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { POST } from '../api/chat.js'
+import { askGemini, parseGeminiInteraction } from './gemini.js'
+import { preparePortfolioRequest, sanitizeHistory, shouldUseGemini } from './portfolioContext.js'
+import { bogotaDateKey, clientIp, reserveGeminiRequest } from './rateLimit.js'
+
+test('uses local answers for a clear first question', () => {
+  const prepared = preparePortfolioRequest('¿Qué hizo Mateo en MiBanco?', [])
+
+  assert.equal(prepared.localAnswer.confidence, 'high')
+  assert.equal(shouldUseGemini(prepared), false)
+  assert.deepEqual(prepared.projectIds, ['mibanco'])
+})
+
+test('uses conversation history to scope a follow-up to its project', () => {
+  const prepared = preparePortfolioRequest('¿Y qué resultados tuvo?', [
+    { role: 'user', content: '¿Qué hizo en MiBanco?' },
+    {
+      role: 'assistant',
+      content: 'Mateo lideró el rediseño de MiBanco.',
+      projectIds: ['mibanco'],
+    },
+  ])
+  const context = JSON.parse(prepared.context)
+
+  assert.equal(shouldUseGemini(prepared), true)
+  assert.deepEqual(prepared.projectIds, ['mibanco'])
+  assert.deepEqual(context.projects.map((project) => project.id), ['mibanco'])
+})
+
+test('sanitizes history length, content and project ids', () => {
+  const history = sanitizeHistory([
+    ...Array.from({ length: 7 }, (_, index) => ({ role: 'user', content: `Message ${index}` })),
+    { role: 'assistant', content: 'x'.repeat(1400), projectIds: ['mibanco', 'unknown'] },
+  ])
+
+  assert.equal(history.length, 6)
+  assert.equal(history.at(-1).content.length, 1200)
+  assert.deepEqual(history.at(-1).projectIds, ['mibanco'])
+})
+
+test('parses text from a Gemini interaction response', () => {
+  const text = parseGeminiInteraction({
+    steps: [
+      { type: 'thought', content: [] },
+      { type: 'model_output', content: [{ type: 'text', text: 'Respuesta sustentada.' }] },
+    ],
+  })
+
+  assert.equal(text, 'Respuesta sustentada.')
+})
+
+test('sends the current Gemini 3.5 Flash-Lite configuration', async () => {
+  let requestBody
+  const result = await askGemini({
+    apiKey: 'test-key',
+    context: '{"projects":[]}',
+    history: [],
+    question: 'Hola',
+    fetchImpl: async (_url, options) => {
+      requestBody = JSON.parse(options.body)
+      return Response.json({
+        steps: [{ type: 'model_output', content: [{ type: 'text', text: 'Hola.' }] }],
+      })
+    },
+  })
+
+  assert.equal(result.text, 'Hola.')
+  assert.equal(requestBody.model, 'gemini-3.5-flash-lite')
+  assert.equal(requestBody.service_tier, 'standard')
+  assert.equal(requestBody.store, false)
+  assert.equal(requestBody.generation_config.thinking_level, 'minimal')
+  assert.equal(requestBody.generation_config.max_output_tokens, 400)
+  assert.equal('temperature' in requestBody.generation_config, false)
+})
+
+test('builds Bogotá date keys and reads the first forwarded IP', () => {
+  assert.equal(bogotaDateKey(new Date('2026-08-09T02:00:00Z')), '2026-08-08')
+  assert.equal(
+    clientIp(new Request('https://portfolio.test', { headers: { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' } })),
+    '1.2.3.4',
+  )
+})
+
+test('reserves one atomic global and visitor request', async () => {
+  let keys
+  let args
+  const redis = {
+    eval: async (_script, receivedKeys, receivedArgs) => {
+      keys = receivedKeys
+      args = receivedArgs
+      return [1, 1, 1, 0]
+    },
+  }
+  const result = await reserveGeminiRequest({
+    request: new Request('https://portfolio.test', { headers: { 'x-forwarded-for': '1.2.3.4' } }),
+    redis,
+    env: {
+      GEMINI_API_KEY: 'test-key',
+      GEMINI_DAILY_LIMIT: '10',
+      GEMINI_VISITOR_DAILY_LIMIT: '5',
+    },
+    date: new Date('2026-08-08T18:00:00Z'),
+  })
+
+  assert.equal(result.allowed, true)
+  assert.equal(result.remaining, 9)
+  assert.equal(keys[0], 'portfolio-chat:{2026-08-08}:global')
+  assert.equal(keys[1].startsWith('portfolio-chat:{2026-08-08}:visitor:'), true)
+  assert.deepEqual(args.slice(0, 2), [10, 5])
+})
+
+test('reports a rejected global reservation without incrementing counters', async () => {
+  const redis = { eval: async () => [0, 10, 3, 1] }
+  const result = await reserveGeminiRequest({
+    request: new Request('https://portfolio.test'),
+    redis,
+    env: { GEMINI_API_KEY: 'test-key', GEMINI_DAILY_LIMIT: '10' },
+  })
+
+  assert.equal(result.allowed, false)
+  assert.equal(result.reason, 'global')
+  assert.equal(result.remaining, 0)
+})
+
+test('the Vercel route answers a deterministic question without secrets', async () => {
+  const response = await POST(
+    new Request('https://portfolio.test/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: '¿Qué hizo Mateo en MiBanco?', history: [] }),
+    }),
+  )
+  const payload = await response.json()
+
+  assert.equal(response.status, 200)
+  assert.equal(payload.source, 'local')
+  assert.equal(payload.reason, 'deterministic')
+  assert.deepEqual(payload.projectIds, ['mibanco'])
+})
