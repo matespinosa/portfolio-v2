@@ -52,8 +52,14 @@ export function clientIp(request) {
 }
 
 export function createRateLimitStore(env = process.env) {
-  const url = env.UPSTASH_REDIS_REST_URL || env.KV_REST_API_URL
-  const token = env.UPSTASH_REDIS_REST_TOKEN || env.KV_REST_API_TOKEN
+  const url =
+    env.UPSTASH_REDIS_REST_URL ||
+    env.UPSTASH_REDIS_REST_KV_REST_API_URL ||
+    env.KV_REST_API_URL
+  const token =
+    env.UPSTASH_REDIS_REST_TOKEN ||
+    env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN ||
+    env.KV_REST_API_TOKEN
   if (!url || !token) return null
   return new Redis({ url, token })
 }
@@ -91,4 +97,3 @@ export async function reserveGeminiRequest({ request, redis, env = process.env, 
     reason: reasonCode === 1 ? 'global' : reasonCode === 2 ? 'visitor' : null,
   }
 }
-
