@@ -53,7 +53,7 @@ export default function Work({ onOpen }) {
         <h2 className="section-title" id="work-title">
           Selected <em>fieldwork</em>
         </h2>
-        <p className="section-sub">Five products, real responsibilities</p>
+        <p className="section-sub">Four products, real responsibilities</p>
       </header>
 
       <ul className="work-grid" data-inspect="Work / grid">
@@ -71,9 +71,12 @@ export default function Work({ onOpen }) {
               onClick={() => onOpen(p)}
             >
               <span className="work-media">
+                <span className="work-index mono" aria-hidden="true">
+                  {p.index}
+                </span>
                 <img
-                  src="/project-placeholder.png"
-                  alt={`Neutral temporary cover for ${p.title}`}
+                  src={p.heroImage}
+                  alt={`${p.title} project cover`}
                   loading="lazy"
                   width="840"
                   height="630"

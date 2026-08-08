@@ -2620,7 +2620,7 @@ main > section:not(.hero)::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) saturate(0.2) contrast(0.94);
+  filter: saturate(0.86) contrast(0.96);
   transition: transform var(--dur-slow) var(--ease-expo);
 }
 
@@ -2638,6 +2638,7 @@ main > section:not(.hero)::after {
   position: absolute;
   top: 0.65rem;
   left: 0.7rem;
+  z-index: 1;
   background: oklch(0.952 0.013 82 / 0.9);
   color: var(--ink);
   padding: 2px 6px 3px;
@@ -3268,12 +3269,17 @@ body.has-custom-cursor .world-canvas {
 }
 
 .case-hero .cover-canvas,
-.case-hero .cover-img {
+.case-hero .cover-img,
+.case-hero .case-cover-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.case-cover-img {
+  filter: saturate(0.9) contrast(0.98);
 }
 
 .case-hero::after {
@@ -3356,6 +3362,127 @@ body.has-custom-cursor .world-canvas {
   line-height: 1.45;
 }
 
+.case-section {
+  display: grid;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--line);
+}
+
+.case-section h3,
+.case-outcome-panel h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.014em;
+}
+
+.case-section p {
+  color: var(--muted);
+}
+
+.case-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.case-list li {
+  position: relative;
+  padding-left: 1rem;
+  color: var(--muted);
+}
+
+.case-list li::before {
+  content: "";
+  position: absolute;
+  top: 0.7em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.case-metrics,
+.case-gallery,
+.case-outcome-panel {
+  grid-column: 1 / -1;
+}
+
+.case-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.case-metric {
+  display: grid;
+  gap: 0.22rem;
+  min-height: 8.5rem;
+  align-content: center;
+  padding: var(--space-md);
+  border-right: 1px solid var(--line);
+}
+
+.case-metric:last-child {
+  border-right: 0;
+}
+
+.case-metric strong {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 2.2vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.case-metric span {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.case-metric small {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.case-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.case-gallery-item {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.case-gallery-item img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.case-gallery-item figcaption {
+  color: var(--muted);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+
+.case-outcome-panel {
+  display: grid;
+  gap: var(--space-sm);
+}
+
 .case-outcomes {
   margin-top: var(--space-sm);
   border-top: 1px solid var(--line-strong);
@@ -3414,6 +3541,52 @@ body.has-custom-cursor .world-canvas {
 
 @media (max-width: 900px) {
   .case-body {
+    grid-template-columns: 1fr;
+  }
+
+  .case-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .case-metric:nth-child(2) {
+    border-right: 0;
+  }
+
+  .case-metric:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 640px) {
+  .case-close {
+    top: 0.85rem;
+    right: var(--gutter);
+    padding: 0.52rem 0.8rem;
+  }
+
+  .case-hero {
+    height: min(58vh, 34rem);
+  }
+
+  .case-hero-inner {
+    padding-bottom: var(--space-md);
+  }
+
+  .case-body {
+    padding-top: var(--space-md);
+  }
+
+  .case-meta div {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .case-metric {
+    min-height: 7.4rem;
+    padding: var(--space-sm);
+  }
+
+  .case-gallery {
     grid-template-columns: 1fr;
   }
 }

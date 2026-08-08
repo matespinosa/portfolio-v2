@@ -7,9 +7,9 @@ test('answers broad financial-product questions in Spanish', () => {
 
   assert.equal(answer.language, 'es')
   assert.equal(answer.confidence, 'high')
-  assert.deepEqual(answer.projectIds, ['mibanco', 'mifel', 'credicorp', 'kapital'])
+  assert.deepEqual(answer.projectIds, ['modyo', 'mibanco', 'credicorp', 'dando'])
   assert.match(answer.text, /MiBanco/)
-  assert.match(answer.text, /Kapital Bank/)
+  assert.match(answer.text, /Dando by CFG/)
 })
 
 test('answers frontend questions from the profile', () => {
@@ -28,18 +28,18 @@ test('answers AI-practice questions without treating AI as part of another word'
   assert.match(answer.text, /Cursor, Codex and Claude/)
 })
 
-test('routes design-system questions to the documented Mifel case', () => {
+test('routes design-system questions to the documented Modyo case', () => {
   const answer = answerPortfolioQuestion('What design systems has Mateo worked on?')
 
-  assert.deepEqual(answer.projectIds, ['mifel'])
-  assert.match(answer.text, /component system/)
+  assert.deepEqual(answer.projectIds, ['modyo'])
+  assert.match(answer.text, /shared product foundations/)
 })
 
 test('returns a specific project and its documented outcomes', () => {
-  const answer = answerPortfolioQuestion('What were the outcomes for Rappi Merchants?')
+  const answer = answerPortfolioQuestion('What were the outcomes for Dando by CFG?')
 
-  assert.deepEqual(answer.projectIds, ['rappi'])
-  assert.match(answer.text, /Unified roadmap/)
+  assert.deepEqual(answer.projectIds, ['dando'])
+  assert.match(answer.text, /158%/)
 })
 
 test('tolerates a typo in a project name', () => {
@@ -47,7 +47,7 @@ test('tolerates a typo in a project name', () => {
 
   assert.equal(answer.confidence, 'medium')
   assert.deepEqual(answer.projectIds, ['credicorp'])
-  assert.match(answer.text, /Credicorp Capital/)
+  assert.match(answer.text, /foreign-currency/)
 })
 
 test('understands a spaced project alias in Spanish', () => {
@@ -58,11 +58,11 @@ test('understands a spaced project alias in Spanish', () => {
   assert.match(answer.text, /onboarding/)
 })
 
-test('does not invent quantified metrics', () => {
+test('returns documented quantified metrics', () => {
   const answer = answerPortfolioQuestion('What conversion metrics did Credicorp achieve?')
 
   assert.deepEqual(answer.projectIds, ['credicorp'])
-  assert.match(answer.text, /does not include quantified metrics/)
+  assert.match(answer.text, /US\$1.2B/)
 })
 
 test('does not expose personal details that are absent from the portfolio data', () => {

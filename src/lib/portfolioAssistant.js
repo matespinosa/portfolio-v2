@@ -16,128 +16,55 @@ const SUGGESTIONS = {
 }
 
 const PROJECT_ALIASES = {
-  rappi: ['rappi', 'rappi merchants', 'merchants', 'merchant', 'mi tienda', 'portal partners', 'portal aliados'],
+  modyo: ['modyo', 'modyo platform', 'dxp', 'low code', 'low-code'],
   mibanco: ['mibanco', 'mi banco', 'cdt', 'cdts'],
-  mifel: ['banca mifel', 'mifel'],
-  credicorp: ['credicorp', 'credicorp capital'],
-  kapital: ['kapital', 'kapital bank', 'factoring', 'factoraje'],
+  credicorp: ['credicorp', 'credicorp capital', 'corporate fx'],
+  dando: ['dando', 'dando by cfg', 'cfg partners', 'libranza'],
 }
 
 const PROJECT_TOPICS = {
-  rappi: [
-    'restaurants',
-    'restaurantes',
-    'merchant operations',
-    'operaciones de comercios',
-    'portal unification',
-    'unificacion de portales',
-    'rappi ds',
-  ],
-  mibanco: [
-    'onboarding',
-    'transactions',
-    'transacciones',
-    'payments',
-    'pagos',
-    'credit',
-    'credito',
-    'digital banking',
-  ],
-  mifel: [
-    'mobile banking',
-    'banca movil',
-    'design system',
-    'sistema de diseno',
-    'components',
-    'componentes',
-  ],
-  credicorp: [
-    'corporate investment',
-    'inversion corporativa',
-    'trusts',
-    'fideicomisos',
-    'investments',
-    'inversiones',
-    'corporate finance',
-  ],
-  kapital: [
-    'transactional banking',
-    'banca transaccional',
-    'colombia mobile app',
-    'aplicacion colombia',
-  ],
+  modyo: ['dxp', 'digital experience platform', 'design system', 'sistema de diseno', 'low code', 'micro frontend'],
+  mibanco: ['onboarding', 'transactions', 'transacciones', 'payments', 'pagos', 'credit', 'credito', 'digital banking'],
+  credicorp: ['corporate fx', 'foreign exchange', 'divisas', 'treasury', 'tesoreria', 'cambio', 'backoffice'],
+  dando: ['digital lending', 'prestamos digitales', 'lending', 'kyc', 'backoffice', 'simulador', 'loan simulator'],
 }
 
 const PROJECT_ES = {
-  rappi: {
-    category: 'operaciones para restaurantes y Mi Tienda',
-    role: 'Product Designer en Merchants',
-    scope:
-      'la unificación de Portal Partners y Portal Aliados, los flujos operativos para comercios y la adopción de Rappi DS',
-    summary:
-      'Mateo lidera diseño de producto para la experiencia de comercios de Restaurantes y Mi Tienda, las superficies que los aliados usan para operar sus negocios.',
-    outcomes: [
-      'Responsabilidad de producto sobre las experiencias de Restaurantes y Mi Tienda',
-      'Una hoja de ruta unificada para Portal Partners y Portal Aliados',
-      'Rappi DS como base de producto e implementación',
-    ],
+  modyo: {
+    category: 'plataforma de experiencia digital, sistema de diseño y low-code',
+    role: 'Product Designer enfocado en investigación y sistemas de diseño',
+    scope: 'Modyo 10, herramientas low-code y fundamentos compartidos de producto',
+    summary: 'Mateo investigó, diseñó, validó y llevó a implementación piezas clave de Modyo, una plataforma usada por bancos y fintechs en Latinoamérica.',
+    outcomes: ['48% de tiempo de desarrollo ahorrado frente a una meta de 40%', '92% de éxito de tarea en pruebas moderadas', '78% de mejora UX al resolver inconsistencias de la plataforma'],
   },
   mibanco: {
     category: 'plataforma de banca digital',
-    role: 'Product Designer',
+    role: 'Senior Product Designer enfocado en discovery y sistemas de diseño',
     scope: 'onboarding, transacciones, productos de crédito y gestión de CDTs',
-    summary:
-      'Mateo ayudó a definir un nuevo portal transaccional alrededor de la relación completa entre el cliente y MiBanco.',
-    outcomes: [
-      'Onboarding integrado con el recorrido bancario completo',
-      'Portal transaccional para pagos y operaciones de cuenta',
-      'Experiencias integradas para créditos y CDTs',
-    ],
-  },
-  mifel: {
-    category: 'banca móvil y sistema de diseño',
-    role: 'Product Designer enfocado en sistemas de diseño',
-    scope: 'la aplicación móvil, los patrones de interacción y el sistema de componentes',
-    summary:
-      'Mateo trabajó en la aplicación de banca móvil de Banca Mifel y en el sistema de diseño necesario para mantener su consistencia al crecer.',
-    outcomes: [
-      'Una experiencia central de banca móvil diseñada como sistema coherente',
-      'Componentes y patrones reutilizables para los equipos de producto',
-      'Mayor alineación entre diseño e implementación frontend',
-    ],
+    summary: 'Mateo lideró investigación, sistema de diseño y handoff para modernizar el canal digital de MiBanco.',
+    outcomes: ['Apertura de cuenta reducida de 14 minutos a 4 minutos 30 segundos', '84/100 en System Usability Scale', '+32% de cuentas nuevas en el primer trimestre post-lanzamiento'],
   },
   credicorp: {
-    category: 'plataforma corporativa de inversiones',
-    role: 'Product Designer responsable de la experiencia corporativa',
-    scope: 'fideicomisos, inversiones y gestión de productos financieros',
-    summary:
-      'Mateo fue responsable del área corporativa del portal de clientes de Credicorp Capital, donde las empresas administran fideicomisos, inversiones y su relación financiera.',
-    outcomes: [
-      'Responsabilidad sobre la experiencia del portal para clientes corporativos',
-      'Acceso unificado a fideicomisos, inversiones y productos financieros',
-      'Patrones más claros para flujos densos y de alto impacto',
-    ],
+    category: 'banca corporativa y divisas',
+    role: 'Product Designer enfocado en discovery y rebranding',
+    scope: 'transacciones, backoffice, FX y formularios de cumplimiento',
+    summary: 'Mateo convirtió un proceso telefónico de FX en una experiencia digital para negociar, reservar y liquidar operaciones de divisas.',
+    outcomes: ['US$1.2B transados digitalmente en los primeros seis meses', '96% de reducción en el tiempo del ciclo de liquidación', '340 horas de operaciones ahorradas al mes'],
   },
-  kapital: {
-    category: 'factoring y banca transaccional',
-    role: 'Product Designer',
-    scope: 'factoring, el portal transaccional y la aplicación móvil para Colombia',
-    summary:
-      'El trabajo de Mateo para Kapital Bank cubrió factoring, banca transaccional y la aplicación móvil utilizada por clientes en Colombia.',
-    outcomes: [
-      'Recorridos de factoring convertidos en flujos digitales claros',
-      'Patrones transaccionales consistentes en el portal de clientes',
-      'Experiencia de banca móvil adaptada para clientes en Colombia',
-    ],
+  dando: {
+    category: 'crédito digital y onboarding',
+    role: 'Product Designer enfocado en discovery y sistemas de diseño',
+    scope: 'simulador de crédito, KYC, onboarding y backoffice comercial',
+    summary: 'Mateo transformó el proceso de crédito de CFG Partners en una experiencia 100% digital sin perder la cercanía humana.',
+    outcomes: ['+158% de nuevos clientes después del MVP', '+233% de solicitudes procesadas después del MVP', '+45% de ganancia neta en eficiencia operativa'],
   },
 }
 
 const DELIVERY_ES = {
-  rappi: { team: 'un equipo multifuncional de producto', duration: 'más de 8 meses' },
-  mibanco: { team: 'producto, diseño e ingeniería', duration: 'una colaboración de principio a fin' },
-  mifel: { team: 'producto, diseño e ingeniería', duration: 'una colaboración de producto' },
-  credicorp: { team: 'negocio, producto e ingeniería', duration: 'una responsabilidad continua sobre la plataforma' },
-  kapital: { team: 'producto, diseño e ingeniería', duration: 'múltiples iniciativas' },
+  modyo: { team: 'ingeniería, producto, marketing y QA', duration: 'una colaboración integral de plataforma' },
+  mibanco: { team: 'producto, research, desarrollo, QA y branding', duration: 'un proyecto de principio a fin' },
+  credicorp: { team: 'clientes corporativos, tesorería, operaciones e ingeniería', duration: 'una iniciativa de plataforma' },
+  dando: { team: 'CFG Partners, ventas, riesgo, tesorería e ingeniería', duration: 'una colaboración para el MVP' },
 }
 
 const SPANISH_MARKERS = new Set([
@@ -350,14 +277,15 @@ function projectIntent(context) {
 
 function answerProject(project, intent, language, confidence = 'high') {
   if (intent === 'unsupported-metrics') {
+    const metrics = project.metrics.map((metric) => `${metric.value} ${metric.label} (${metric.detail})`)
     return makeAnswer({
       language,
       projectIds: [project.id],
       confidence: 'high',
       text:
         language === 'es'
-          ? `El portafolio no incluye métricas cuantificadas para ${project.title}. Sí documenta responsabilidades, alcance y resultados cualitativos, sin inventar cifras.`
-          : `The portfolio does not include quantified metrics for ${project.title}. It does document responsibilities, scope and qualitative outcomes, without inventing numbers.`,
+          ? `Las métricas documentadas para ${project.title} son:\n${bulletList(metrics)}`
+          : `The documented metrics for ${project.title} are:\n${bulletList(metrics)}`,
     })
   }
 
@@ -403,9 +331,7 @@ function answerProjectSet(matchedProjects, language) {
 }
 
 function answerAllProjects(language, financialOnly = false) {
-  const selected = financialOnly
-    ? projects.filter((project) => project.id !== 'rappi')
-    : projects
+  const selected = projects
   const lines = selected.map((project) => {
     const category = language === 'es' ? PROJECT_ES[project.id].category : project.category
     return `${project.title} — ${category}`
@@ -424,7 +350,7 @@ function answerAllProjects(language, financialOnly = false) {
         : `${
             financialOnly
               ? 'Mateo has designed financial products across four contexts:'
-              : 'The portfolio presents five product cases:'
+              : 'The portfolio presents four product cases:'
           }\n${bulletList(lines)}`,
   })
 }
@@ -539,7 +465,7 @@ export function answerPortfolioQuestion(question) {
   }
 
   if (matchesAny(context, ['design system', 'design systems', 'component system', 'sistema de diseño', 'sistemas de diseño', 'sistema de componentes'])) {
-    return answerProject(projectById('mifel'), 'scope', language)
+    return answerProject(projectById('modyo'), 'scope', language)
   }
 
   const fuzzyMatch = fuzzyProjectMatch(context)

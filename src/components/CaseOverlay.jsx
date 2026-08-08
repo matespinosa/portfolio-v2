@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import gsap from 'gsap'
 import { projects } from '../data/projects'
-import CoverCanvas from './CoverCanvas'
 import { lockScroll, reducedMotion } from '../lib/scroll'
 
 export default function CaseOverlay({ project, onNavigate, onClose }) {
@@ -122,7 +121,13 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
       </button>
       <div className="case-scroll" ref={scrollRef} data-lenis-prevent>
         <header className="case-hero">
-          <CoverCanvas project={current} className="cover-canvas" />
+          <img
+            className="case-cover-img"
+            src={current.heroImage}
+            alt={`${current.title} project cover`}
+            width="2048"
+            height="1536"
+          />
           <div className="case-hero-inner container">
             <h2 className="case-title" id="case-title">
               {current.title}
@@ -153,15 +158,45 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
           </dl>
           <div className="case-text">
             <p>{current.intro}</p>
-            {current.body.map((para) => (
-              <p key={para.slice(0, 24)}>{para}</p>
+            {current.sections.map((section) => (
+              <section className="case-section" key={section.title}>
+                <h3>{section.title}</h3>
+                <p>{section.body}</p>
+                {section.bullets?.length ? (
+                  <ul className="case-list">
+                    {section.bullets.map((bullet) => (
+                      <li key={bullet}>{bullet}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
             ))}
+          </div>
+          <section className="case-metrics" aria-label={`${current.title} project metrics`}>
+            {current.metrics.map((metric) => (
+              <div className="case-metric" key={metric.label}>
+                <strong>{metric.value}</strong>
+                <span>{metric.label}</span>
+                <small>{metric.detail}</small>
+              </div>
+            ))}
+          </section>
+          <section className="case-gallery" aria-label={`${current.title} project gallery`}>
+            {current.gallery.map((image) => (
+              <figure className="case-gallery-item" key={image.src}>
+                <img src={image.src} alt={image.alt} loading="lazy" />
+                <figcaption className="mono">{image.label}</figcaption>
+              </figure>
+            ))}
+          </section>
+          <section className="case-outcome-panel">
+            <h3>Selected outcomes</h3>
             <ul className="case-outcomes">
-              {current.outcomes.map((o) => (
-                <li key={o}>{o}</li>
+              {current.outcomes.map((outcome) => (
+                <li key={outcome}>{outcome}</li>
               ))}
             </ul>
-          </div>
+          </section>
           <button
             type="button"
             className="case-next"
