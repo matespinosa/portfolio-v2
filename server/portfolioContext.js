@@ -1,6 +1,7 @@
 import { experience, projects, selectedClients } from '../src/data/projects.js'
 import { profile } from '../src/data/profile.js'
-import { answerPortfolioQuestion } from '../src/lib/portfolioAssistant.js'
+import { answerPortfolioQuestion, mentionedProjectIds } from '../src/lib/portfolioAssistant.js'
+import { isPortfolioFollowUp } from '../src/lib/portfolioPresentation.js'
 
 const MAX_HISTORY_MESSAGES = 6
 const MAX_MESSAGE_LENGTH = 1200
@@ -44,14 +45,23 @@ export function sanitizeHistory(rawHistory) {
 
 export function preparePortfolioRequest(question, rawHistory) {
   const history = sanitizeHistory(rawHistory)
-  const localAnswer = answerPortfolioQuestion(question)
+  const initialAnswer = answerPortfolioQuestion(question)
+  const explicitlyMentionedIds = mentionedProjectIds(question)
+  const latestContextIds = [...history]
+    .reverse()
+    .find((message) => message.projectIds.some((projectId) => projectId !== 'rappi'))
+    ?.projectIds.filter((projectId) => projectId !== 'rappi') || []
+  const shouldInheritContext =
+    isPortfolioFollowUp(question) &&
+    explicitlyMentionedIds.length === 0 &&
+    !initialAnswer.projectIds.includes('rappi') &&
+    latestContextIds.length > 0
+  const localAnswer = shouldInheritContext
+    ? answerPortfolioQuestion(question, { projectIds: latestContextIds })
+    : initialAnswer
   const relevantIds = new Set(
     localAnswer.projectIds.filter((projectId) => KNOWN_PROJECT_IDS.has(projectId)),
   )
-
-  for (const message of history) {
-    for (const projectId of message.projectIds) relevantIds.add(projectId)
-  }
 
   const selectedProjects = relevantIds.size
     ? projects.filter((project) => relevantIds.has(project.id))
@@ -75,4 +85,3 @@ export function preparePortfolioRequest(question, rawHistory) {
 export function shouldUseGemini({ history, localAnswer }) {
   return history.length > 0 || localAnswer.confidence !== 'high'
 }
-

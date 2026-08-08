@@ -1,4 +1,70 @@
-# Design QA — Portfolio project import
+# Design QA — Adaptive portfolio chat
+
+## Source visual truth
+
+- Approved concept: `/Users/mateoespinosa/.codex/generated_images/019fe208-fe38-7ca0-a45b-9153cd2cf5a3/exec-198fb5b9-02d0-4d09-b9bc-569460b999ea.png`
+- Source dimensions: 853 × 1844 px.
+- Source state: a mobile answer showing a warm-paper project carousel, vintage covers, metrics, case-study actions and follow-up chips.
+- Product requirement added after approval: each question must select a response presentation appropriate to its intent instead of reusing the carousel for every answer.
+
+## Implementation evidence
+
+- Mobile implementation: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-mobile.png`
+- Normalized side-by-side comparison: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-comparison.png`
+- MiBanco case-gallery state: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-case-gallery.png`
+- Local URL: `http://127.0.0.1:5173/`
+- Primary viewport: 390 × 844 CSS px at 1×. The 853 × 1844 source was normalized to 390 × 844 for the comparison.
+- Responsive viewport checked: 1024 × 800 CSS px. The drawer measured 496 × 776 px with zero page-level horizontal overflow.
+
+## Full-view comparison
+
+- The implementation preserves the concept's warm paper, near-black actions, editorial type hierarchy, fine borders, circular assistant mark and compact mono metadata.
+- It uses the existing grayscale/vintage project covers in the chat. The MiBanco card exposes the next project as a partial horizontal preview and uses scroll snapping, pagination and a large case-study action.
+- The card is intentionally wider than the normalized concept so one project remains readable at 390 px while still revealing the next item. This also matches the earlier approved one-card-plus-peek composition.
+- The dynamic lead reflects the user's actual wording rather than hard-coding the concept copy.
+- The local preview correctly shows `Local · Ready`; the deployed Vercel route can show Gemini's remaining daily allowance.
+
+## Focused comparison and states
+
+- Project query: renders a three-item vintage carousel for MiBanco, Credicorp Capital and Dando by CFG.
+- Results follow-up: replaces the carousel with three metric grids and keeps exactly the previous project scope.
+- Process follow-up: renders a four-step process panel with a project switcher.
+- Role follow-up: renders three role/scope/team briefs.
+- Career question: renders a five-item experience timeline.
+- MiBanco “Explorar caso”: opens the existing accessible dialog and exposes four real case images for research, system, product experience and outcomes.
+
+## Accessibility and behavior checks
+
+- Assistant and user messages have screen-reader labels; the transcript is a polite live log.
+- Carousel pagination reports the active item with `aria-current`; project switchers use tab semantics; follow-up controls and case actions are native buttons.
+- Global `:focus-visible` styling and reduced-motion handling remain active.
+- The mobile drawer uses the full viewport, keeps the composer reachable and has no document-level horizontal overflow; horizontal scrolling is isolated to the intended carousel and project switcher.
+- Escape and the close control dismiss the case dialog, and focus restoration remains handled by the existing overlay.
+- Browser console contained no runtime errors during mobile and desktop checks.
+
+## Findings
+
+- No actionable P0, P1 or P2 findings remain.
+- [P3 — intentional responsive adaptation] The implementation displays one complete card plus a partial next card instead of shrinking three cards into the 390 px viewport. This preserves legibility, tapability and the carousel affordance.
+- [P3 — environment state] Local Vite cannot execute the Vercel API route, so follow-up QA exercised the contextual local fallback and displayed `Local · Offline`. Production retains the Gemini route and daily-limit state.
+
+## Iteration history
+
+1. Replaced plain assistant text with an explicit presentation contract driven by question intent.
+2. Added carousel, project spotlight, metric grid, process, role, profile and suggestion presentations.
+3. Reused local vintage covers in the chat while preserving the existing real project galleries inside each case.
+4. Added contextual project inheritance so “estos proyectos”, “este proyecto” and short intent follow-ups do not expand back to unrelated cases.
+5. Localized short titles, process summaries, role copy, metric labels and metric details for Spanish answers.
+6. Adjusted mobile transcript alignment so a new assistant answer starts directly below the fixed header.
+7. Verified mobile and desktop layouts, project opening, response-style transitions, console output, tests, lint and production build.
+
+## Final result
+
+passed
+
+---
+
+# Previous QA — Portfolio project import
 
 ## Source visual truth
 

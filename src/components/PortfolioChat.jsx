@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { Sparkle } from '@phosphor-icons/react'
 import { chatSuggestions } from '../data/profile'
-import { projects } from '../data/projects'
-import { answerPortfolioQuestion } from '../lib/portfolioAssistant'
+import { answerPortfolioQuestion, mentionedProjectIds } from '../lib/portfolioAssistant'
 import { requestPortfolioAnswer, serializeChatHistory } from '../lib/portfolioChatApi'
+import { classifyPortfolioPresentation, isPortfolioFollowUp } from '../lib/portfolioPresentation'
+import PortfolioResponse from './PortfolioResponse'
 
 const SUGGESTION_LABELS = ['Fintech products', 'Frontend practice', 'Current role at Rappi']
 
@@ -20,6 +22,7 @@ export default function PortfolioChat({ onOpenProject }) {
   const [remainingRequests, setRemainingRequests] = useState(null)
   const inputRef = useRef(null)
   const transcriptRef = useRef(null)
+  const latestAssistantRef = useRef(null)
   const launcherRef = useRef(null)
   const shouldFollowRef = useRef(true)
   const isInitial = messages.length === 0
@@ -30,6 +33,13 @@ export default function PortfolioChat({ onOpenProject }) {
   }, [])
 
   useEffect(() => {
+    const latestMessage = messages.at(-1)
+    if (latestMessage?.role === 'assistant') {
+      window.requestAnimationFrame(() => {
+        latestAssistantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+      return
+    }
     if (!shouldFollowRef.current) return
     transcriptRef.current?.scrollTo({
       top: transcriptRef.current.scrollHeight,
@@ -75,8 +85,20 @@ export default function PortfolioChat({ onOpenProject }) {
     const content = question.trim()
     if (!content || isSending) return
 
-    const fallback = answerPortfolioQuestion(content)
     const history = serializeChatHistory(messages)
+    const initialFallback = answerPortfolioQuestion(content)
+    const latestContextIds = [...history]
+      .reverse()
+      .find((message) => message.projectIds?.some((projectId) => projectId !== 'rappi'))
+      ?.projectIds.filter((projectId) => projectId !== 'rappi') || []
+    const shouldInheritContext =
+      isPortfolioFollowUp(content) &&
+      mentionedProjectIds(content).length === 0 &&
+      !initialFallback.projectIds.includes('rappi') &&
+      latestContextIds.length > 0
+    const fallback = shouldInheritContext
+      ? answerPortfolioQuestion(content, { projectIds: latestContextIds })
+      : initialFallback
     const canAnswerLocally = history.length === 0 && fallback.confidence === 'high'
     const userMessage = { id: makeId(), role: 'user', content }
 
@@ -109,6 +131,7 @@ export default function PortfolioChat({ onOpenProject }) {
       language: answer.language,
       projectIds: answer.projectIds,
       suggestions: answer.suggestions,
+      presentation: classifyPortfolioPresentation({ question: content, answer }),
     }
 
     setMessages((current) => [...current, assistantMessage])
@@ -306,72 +329,37 @@ export default function PortfolioChat({ onOpenProject }) {
                   shouldFollowRef.current = distanceFromBottom < 48
                 }}
               >
-                {messages.map((message) => (
+                {messages.map((message, index) => (
                   <article
                     className="portfolio-chat__message"
                     data-role={message.role}
                     key={message.id}
+                    ref={
+                      message.role === 'assistant' && index === messages.length - 1
+                        ? latestAssistantRef
+                        : undefined
+                    }
                   >
                     {message.role === 'assistant' && (
                       <span className="portfolio-chat__avatar" aria-hidden="true">
-                        <img src="/favicon.svg" alt="" />
+                        <Sparkle size={17} weight="fill" />
                       </span>
                     )}
                     <div className="portfolio-chat__message-content">
                       {message.role === 'assistant' && (
-                        <span className="portfolio-chat__message-author">Mateo portfolio guide</span>
+                        <span className="visually-hidden">Mateo portfolio guide:</span>
                       )}
                       {message.role === 'user' && <span className="visually-hidden">You said:</span>}
-                      <p>{message.content}</p>
-                      {message.role === 'assistant' && message.projectIds?.length > 0 && (
-                        <div
-                          className="portfolio-chat__project-actions"
-                          role="group"
-                          aria-label={
-                            message.language === 'es' ? 'Casos relacionados' : 'Related cases'
-                          }
-                        >
-                          {message.projectIds.map((projectId) => {
-                            const project = projects.find((item) => item.id === projectId)
-                            if (!project || !onOpenProject) return null
-
-                            return (
-                              <button
-                                type="button"
-                                key={project.id}
-                                onClick={() => onOpenProject(project)}
-                              >
-                                {message.language === 'es' ? 'Ver' : 'View'} {project.title}
-                                <span aria-hidden="true">↗</span>
-                              </button>
-                            )
-                          })}
-                        </div>
+                      {message.role === 'assistant' ? (
+                        <PortfolioResponse
+                          message={message}
+                          onAsk={ask}
+                          onOpenProject={onOpenProject}
+                          isSending={isSending}
+                        />
+                      ) : (
+                        <p>{message.content}</p>
                       )}
-                      {message.role === 'assistant' &&
-                        message.confidence === 'low' &&
-                        message.suggestions?.length > 0 && (
-                          <div
-                            className="portfolio-chat__followups"
-                            role="group"
-                            aria-label={
-                              message.language === 'es'
-                                ? 'Preguntas que sí puedo responder'
-                                : 'Questions I can answer'
-                            }
-                          >
-                            {message.suggestions.map((suggestion) => (
-                              <button
-                                type="button"
-                                key={suggestion}
-                                onClick={() => ask(suggestion)}
-                                disabled={isSending}
-                              >
-                                {suggestion}
-                              </button>
-                            ))}
-                          </div>
-                        )}
                     </div>
                   </article>
                 ))}
@@ -381,7 +369,7 @@ export default function PortfolioChat({ onOpenProject }) {
                     data-role="assistant"
                   >
                     <span className="portfolio-chat__avatar" aria-hidden="true">
-                      <img src="/favicon.svg" alt="" />
+                      <Sparkle size={17} weight="fill" />
                     </span>
                     <div className="portfolio-chat__message-content">
                       <span className="portfolio-chat__message-author">Mateo portfolio guide</span>

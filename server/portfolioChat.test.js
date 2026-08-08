@@ -29,6 +29,24 @@ test('uses conversation history to scope a follow-up to its project', () => {
   assert.deepEqual(context.projects.map((project) => project.id), ['mibanco'])
 })
 
+test('keeps a multi-project comparison scoped to the latest answer', () => {
+  const prepared = preparePortfolioRequest('Compara los resultados de estos proyectos.', [
+    {
+      role: 'assistant',
+      content: 'Tres proyectos financieros.',
+      projectIds: ['mibanco', 'credicorp', 'dando'],
+    },
+  ])
+  const context = JSON.parse(prepared.context)
+
+  assert.deepEqual(prepared.projectIds, ['mibanco', 'credicorp', 'dando'])
+  assert.deepEqual(
+    context.projects.map((project) => project.id),
+    ['mibanco', 'credicorp', 'dando'],
+  )
+  assert.match(prepared.localAnswer.text, /resultados documentados/i)
+})
+
 test('sanitizes history length, content and project ids', () => {
   const history = sanitizeHistory([
     ...Array.from({ length: 7 }, (_, index) => ({ role: 'user', content: `Message ${index}` })),

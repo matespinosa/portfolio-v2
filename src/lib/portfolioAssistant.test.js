@@ -7,7 +7,7 @@ test('answers broad financial-product questions in Spanish', () => {
 
   assert.equal(answer.language, 'es')
   assert.equal(answer.confidence, 'high')
-  assert.deepEqual(answer.projectIds, ['modyo', 'mibanco', 'credicorp', 'dando'])
+  assert.deepEqual(answer.projectIds, ['mibanco', 'credicorp', 'dando'])
   assert.match(answer.text, /MiBanco/)
   assert.match(answer.text, /Dando by CFG/)
 })
@@ -19,6 +19,13 @@ test('answers frontend questions from the profile', () => {
   assert.deepEqual(answer.projectIds, [])
   assert.match(answer.text, /React/)
   assert.match(answer.text, /feasibility/)
+})
+
+test('answers career-role questions from the documented experience', () => {
+  const answer = answerPortfolioQuestion('¿Qué cargos ha tenido Mateo?')
+
+  assert.equal(answer.confidence, 'high')
+  assert.match(answer.text, /más de seis años/i)
 })
 
 test('answers AI-practice questions without treating AI as part of another word', () => {

@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js'
 import { profile } from '../data/profile.js'
-import { experience, projects, selectedClients } from '../data/projects.js'
+import { projects, selectedClients } from '../data/projects.js'
 
 const SUGGESTIONS = {
   en: [
@@ -226,6 +226,10 @@ function exactProjectMatches(context) {
   )
 }
 
+export function mentionedProjectIds(question) {
+  return exactProjectMatches(questionContext(question)).map((project) => project.id)
+}
+
 function fuzzyProjectMatch(context) {
   const terms = context.normalized
     .split(' ')
@@ -263,6 +267,9 @@ function projectIntent(context) {
   if (matchesAny(context, ['outcomes', 'outcome', 'results', 'result', 'impact', 'logros', 'resultados', 'resultado', 'impacto'])) {
     return 'outcomes'
   }
+  if (matchesAny(context, ['process', 'method', 'research', 'discovery', 'validation', 'proceso', 'metodología', 'metodologia', 'investigación', 'investigacion', 'descubrimiento', 'validación', 'validacion'])) {
+    return 'process'
+  }
   if (matchesAny(context, ['team', 'duration', 'long', 'equipo', 'duración', 'tiempo'])) {
     return 'delivery'
   }
@@ -297,6 +304,11 @@ function answerProject(project, intent, language, confidence = 'high') {
       role: `En ${project.title}, Mateo trabajó como ${copy.role}. Su responsabilidad cubrió ${copy.scope}.`,
       scope: `El trabajo de Mateo en ${project.title} abarcó ${copy.scope}. ${copy.summary}`,
       outcomes: `Los resultados documentados para ${project.title} son:\n${bulletList(copy.outcomes)}`,
+      process: `El proceso de ${project.title} conectó investigación, diseño, validación e implementación. El caso documenta ${project.sections
+        .filter((section) => section.title !== 'My role')
+        .slice(0, 4)
+        .map((section) => section.title.toLowerCase())
+        .join(', ')}.`,
       delivery: `Mateo trabajó en ${project.title} junto con ${delivery.team}. El portafolio describe la duración como ${delivery.duration}.`,
     }
     return makeAnswer({ text: answers[intent], language, projectIds: [project.id], confidence })
@@ -307,31 +319,89 @@ function answerProject(project, intent, language, confidence = 'high') {
     role: `On ${project.title}, Mateo worked as ${project.role}. His responsibility covered ${project.scope}.`,
     scope: `Mateo's work on ${project.title} covered ${project.scope}. ${toThirdPerson(project.intro)}`,
     outcomes: `The documented outcomes for ${project.title} are:\n${bulletList(project.outcomes)}`,
+    process: `The ${project.title} process connected research, design, validation and implementation. The case documents ${project.sections
+      .filter((section) => section.title !== 'My role')
+      .slice(0, 4)
+      .map((section) => section.title.toLowerCase())
+      .join(', ')}.`,
     delivery: `Mateo worked on ${project.title} with ${project.team.toLowerCase()}. The portfolio describes the duration as ${project.duration.toLowerCase()}.`,
   }
   return makeAnswer({ text: answers[intent], language, projectIds: [project.id], confidence })
 }
 
-function answerProjectSet(matchedProjects, language) {
+function answerProjectSet(matchedProjects, language, intent = 'overview') {
   const lines = matchedProjects.map((project) => {
     if (language === 'es') {
-      return `${project.title} — ${PROJECT_ES[project.id].role}; ${PROJECT_ES[project.id].scope}.`
+      const copy = PROJECT_ES[project.id]
+      const variants = {
+        overview: `${copy.category}; ${copy.scope}`,
+        role: `${copy.role}; ${copy.scope}`,
+        scope: copy.scope,
+        process: project.sections
+          .filter((section) => section.title !== 'My role')
+          .slice(0, 3)
+          .map((section) => section.title)
+          .join(' · '),
+        outcomes: copy.outcomes.slice(0, 2).join('; '),
+        'unsupported-metrics': project.metrics
+          .slice(0, 2)
+          .map((metric) => `${metric.value} ${metric.label}`)
+          .join('; '),
+        delivery: DELIVERY_ES[project.id].team,
+      }
+      return `${project.title} — ${variants[intent] || variants.overview}.`
     }
-    return `${project.title} — ${project.role}; ${project.scope}.`
+    const variants = {
+      overview: `${project.category}; ${project.scope}`,
+      role: `${project.role}; ${project.scope}`,
+      scope: project.scope,
+      process: project.sections
+        .filter((section) => section.title !== 'My role')
+        .slice(0, 3)
+        .map((section) => section.title)
+        .join(' · '),
+      outcomes: project.outcomes.slice(0, 2).join('; '),
+      'unsupported-metrics': project.metrics
+        .slice(0, 2)
+        .map((metric) => `${metric.value} ${metric.label}`)
+        .join('; '),
+      delivery: project.team,
+    }
+    return `${project.title} — ${variants[intent] || variants.overview}.`
   })
+
+  const introductions = {
+    es: {
+      overview: 'Estos son los casos que coinciden con la pregunta:',
+      role: 'Así cambió el rol de Mateo entre los proyectos:',
+      scope: 'Estos fueron los alcances principales:',
+      process: 'Cada proyecto siguió un proceso adaptado a su contexto:',
+      outcomes: 'Estos son los resultados documentados que puedes comparar:',
+      'unsupported-metrics': 'Estas son las métricas documentadas que puedes comparar:',
+      delivery: 'Estos fueron los equipos involucrados:',
+    },
+    en: {
+      overview: 'These are the cases that match the question:',
+      role: "This is how Mateo's role changed across the projects:",
+      scope: 'These were the main areas of scope:',
+      process: 'Each project followed a process adapted to its context:',
+      outcomes: 'These are the documented outcomes you can compare:',
+      'unsupported-metrics': 'These are the documented metrics you can compare:',
+      delivery: 'These were the teams involved:',
+    },
+  }
 
   return makeAnswer({
     language,
     projectIds: matchedProjects.map((project) => project.id),
-    text:
-      language === 'es'
-        ? `Estos son los casos que coinciden con la pregunta:\n${bulletList(lines)}`
-        : `These are the cases that match the question:\n${bulletList(lines)}`,
+    text: `${introductions[language][intent] || introductions[language].overview}\n${bulletList(lines)}`,
   })
 }
 
 function answerAllProjects(language, financialOnly = false) {
-  const selected = projects
+  const selected = financialOnly
+    ? projects.filter((project) => project.id !== 'modyo')
+    : projects
   const lines = selected.map((project) => {
     const category = language === 'es' ? PROJECT_ES[project.id].category : project.category
     return `${project.title} — ${category}`
@@ -344,12 +414,12 @@ function answerAllProjects(language, financialOnly = false) {
       language === 'es'
         ? `${
             financialOnly
-              ? 'Mateo ha diseñado productos financieros en cuatro contextos:'
-              : 'El portafolio presenta cinco casos de producto:'
+              ? 'Mateo ha diseñado productos financieros en tres contextos:'
+              : 'El portafolio presenta cuatro casos de producto:'
           }\n${bulletList(lines)}`
         : `${
             financialOnly
-              ? 'Mateo has designed financial products across four contexts:'
+              ? 'Mateo has designed financial products across three contexts:'
               : 'The portfolio presents four product cases:'
           }\n${bulletList(lines)}`,
   })
@@ -371,7 +441,7 @@ function answerUnsupported(context, language) {
   })
 }
 
-export function answerPortfolioQuestion(question) {
+export function answerPortfolioQuestion(question, { projectIds: contextualProjectIds = [] } = {}) {
   const language = detectLanguage(question)
   const context = questionContext(question)
 
@@ -394,8 +464,16 @@ export function answerPortfolioQuestion(question) {
   const unsupported = answerUnsupported(context, language)
   if (unsupported) return unsupported
 
-  if (exactMatches.length > 1) return answerProjectSet(exactMatches, language)
+  if (exactMatches.length > 1) return answerProjectSet(exactMatches, language, intent)
   if (exactMatches.length === 1) return answerProject(exactMatches[0], intent, language)
+
+  const contextualProjects = projects.filter((project) => contextualProjectIds.includes(project.id))
+  if (contextualProjects.length === 1) {
+    return answerProject(contextualProjects[0], intent, language)
+  }
+  if (contextualProjects.length > 1) {
+    return answerProjectSet(contextualProjects, language, intent)
+  }
 
   if (matchesAny(context, ['current role', 'currently', 'now', 'rol actual', 'actualmente', 'ahora', 'dónde trabaja', 'donde trabaja'])) {
     return makeAnswer({
@@ -428,7 +506,7 @@ export function answerPortfolioQuestion(question) {
     })
   }
 
-  if (matchesAny(context, ['experience', 'background', 'career', 'years', 'trajectory', 'experiencia', 'trayectoria', 'carrera', 'años', 'anos'])) {
+  if (matchesAny(context, ['experience', 'background', 'career', 'years', 'trajectory', 'roles', 'employment', 'history', 'experiencia', 'trayectoria', 'carrera', 'años', 'anos', 'cargos', 'experiencia laboral', 'historial'])) {
     return makeAnswer({
       language,
       text:
@@ -482,16 +560,6 @@ export function answerPortfolioQuestion(question) {
         language === 'es'
           ? 'La práctica de Mateo cubre estrategia de producto, productos financieros, operaciones para comercios, onboarding, transacciones, crédito, sistemas de diseño y flujos B2B complejos.'
           : profile.design,
-    })
-  }
-
-  if (matchesAny(context, ['roles', 'employment', 'history', 'experiencia laboral', 'historial'])) {
-    return makeAnswer({
-      language,
-      text:
-        language === 'es'
-          ? `La experiencia documentada incluye:\n${bulletList(experience.map((item) => `${item.org}: ${item.role} (${item.span})`))}`
-          : `The documented experience includes:\n${bulletList(experience.map((item) => `${item.org}: ${item.role} (${item.span})`))}`,
     })
   }
 
