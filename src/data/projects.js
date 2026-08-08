@@ -1,0 +1,148 @@
+export const projects = [
+  {
+    id: 'rappi',
+    index: '01',
+    title: 'Rappi Merchants',
+    category: 'Restaurants & Mi Tienda',
+    year: 'Current',
+    role: 'Product Designer · Merchants',
+    scope: 'Portal unification, merchant workflows, Rappi DS',
+    team: 'Cross-functional product squad',
+    duration: '8+ months',
+    colors: ['#1f1d1a', '#655f58', '#ece8e1'],
+    seed: 3.1,
+    freq: 5.0,
+    warp: 1.1,
+    intro:
+      'I own product design across Rappi’s merchant experience for Restaurants and Mi Tienda, the surfaces partners use to operate their businesses every day.',
+    body: [
+      'The current initiative brings Portal Partners and Portal Aliados into one unified product. The work spans information architecture, operational flows and the transition toward a shared experience instead of two products evolving in parallel.',
+      'Rappi DS is the foundation for the new portal. I use the system to move faster without flattening product decisions, working with product and engineering to turn complex merchant operations into clear, reusable patterns.',
+    ],
+    outcomes: [
+      'Product ownership across Restaurants and Mi Tienda experiences',
+      'Unified roadmap for Portal Partners and Portal Aliados',
+      'Rappi DS applied as the product and implementation foundation',
+    ],
+  },
+  {
+    id: 'mibanco',
+    index: '02',
+    title: 'MiBanco',
+    category: 'Digital banking platform',
+    year: 'Modyo',
+    role: 'Product Designer',
+    scope: 'Onboarding, transactions, credit products and CDT management',
+    team: 'Product, design and engineering',
+    duration: 'End-to-end engagement',
+    colors: ['#26231f', '#736d65', '#e6e1d9'],
+    seed: 7.7,
+    freq: 6.0,
+    warp: 1.2,
+    intro:
+      'For MiBanco, I helped shape a new transactional portal designed around the full relationship between a customer and the bank.',
+    body: [
+      'The work began with onboarding and expanded into the core authenticated experience: everyday transactions, credit management and CDT products. Each flow had to make financial complexity understandable without hiding the decisions customers were making.',
+      'The result was approached as one coherent banking product, with reusable patterns and states that could support both initial activation and long-term account management.',
+    ],
+    outcomes: [
+      'Onboarding designed as part of the complete banking journey',
+      'Transactional portal covering payments and account operations',
+      'Integrated experiences for credit and CDT management',
+    ],
+  },
+  {
+    id: 'mifel',
+    index: '03',
+    title: 'Banca Mifel',
+    category: 'Mobile banking & design system',
+    year: 'Modyo',
+    role: 'Product Designer · Design systems',
+    scope: 'Mobile application, interaction patterns and component system',
+    team: 'Product, design and engineering',
+    duration: 'Product engagement',
+    colors: ['#211f1c', '#615c55', '#e9e5de'],
+    seed: 12.4,
+    freq: 4.5,
+    warp: 1.0,
+    intro:
+      'I worked on Banca Mifel’s mobile banking application and the design system needed to make the product consistent as it grew.',
+    body: [
+      'The application brought high-frequency banking tasks into a clearer mobile structure, balancing security, operational detail and the speed customers expect from everyday financial tools.',
+      'Alongside the product flows, I helped create a component and pattern foundation that aligned design and implementation, reduced one-off decisions and gave new features a reliable starting point.',
+    ],
+    outcomes: [
+      'Core mobile banking experience designed as a coherent system',
+      'Reusable components and patterns for product teams',
+      'Closer alignment between design decisions and frontend implementation',
+    ],
+  },
+  {
+    id: 'credicorp',
+    index: '04',
+    title: 'Credicorp Capital',
+    category: 'Corporate investment platform',
+    year: 'B2B',
+    role: 'Product Designer · Corporate experience owner',
+    scope: 'Trusts, investments and financial product management',
+    team: 'Business, product and engineering',
+    duration: 'Platform ownership',
+    colors: ['#25221f', '#6a645d', '#e8e3dc'],
+    seed: 21.8,
+    freq: 5.5,
+    warp: 0.9,
+    intro:
+      'At Credicorp Capital, I owned the corporate area of the client portal, where companies manage trusts, investments and their broader financial relationship.',
+    body: [
+      'The challenge was not visual simplification alone. Corporate finance involves dense information, permissions and high-consequence actions, so the interface had to make status, ownership and next steps explicit at every point.',
+      'I worked across the experience to connect multiple financial products through a shared navigation and interaction model, giving business clients a clearer view of complex portfolios and operations.',
+    ],
+    outcomes: [
+      'Ownership of the portal experience for corporate clients',
+      'Unified access to trusts, investments and financial products',
+      'Clearer interaction patterns for dense, high-consequence workflows',
+    ],
+  },
+  {
+    id: 'kapital',
+    index: '05',
+    title: 'Kapital Bank',
+    category: 'Factoring & transactional banking',
+    year: 'Fintech',
+    role: 'Product Designer',
+    scope: 'Factoring, transactional portal and Colombia mobile app',
+    team: 'Product, design and engineering',
+    duration: 'Multiple initiatives',
+    colors: ['#201e1b', '#5f5a53', '#ece7df'],
+    seed: 33.3,
+    freq: 6.5,
+    warp: 1.15,
+    intro:
+      'My work for Kapital Bank covered factoring, transactional banking and the mobile application used by customers in Colombia.',
+    body: [
+      'Factoring required translating a specialized financial operation into a flow where businesses could understand eligibility, status and next actions without depending on manual support.',
+      'I also contributed to the transactional initiative across the client portal and to Kapital’s Colombia application, connecting day-to-day banking operations through consistent product patterns.',
+    ],
+    outcomes: [
+      'Factoring journeys translated into clear digital workflows',
+      'Transactional product patterns across the customer portal',
+      'Mobile banking experience adapted for customers in Colombia',
+    ],
+  },
+]
+
+export const selectedClients = [
+  { org: 'Rappi', detail: 'Merchants · Restaurants · Mi Tienda', context: 'Current' },
+  { org: 'MiBanco', detail: 'Onboarding · Transactions · Credit · CDTs', context: 'Modyo' },
+  { org: 'Banca Mifel', detail: 'Mobile banking · Design system', context: 'Modyo' },
+  { org: 'Credicorp Capital', detail: 'Corporate investment platform', context: 'Fintech' },
+  { org: 'Kapital Bank', detail: 'Factoring · Transactions · Mobile', context: 'Fintech' },
+  { org: 'Modyo portfolio', detail: 'Banco Mundo Mujer · Sura · PS Factory', context: 'Client work' },
+]
+
+export const experience = [
+  { org: 'Rappi', role: 'Product Designer · Merchants', span: '2025 - now' },
+  { org: 'Product design', role: 'Financial products & complex platforms', span: '5+ years' },
+  { org: 'Frontend', role: 'React, Next.js and web foundations', span: '6+ years' },
+  { org: 'AI-enabled practice', role: 'Cursor, Codex and Claude', span: '2025 - 26' },
+]
