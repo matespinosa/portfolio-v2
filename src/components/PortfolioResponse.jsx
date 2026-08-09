@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import {
   ArrowUpRight,
   Briefcase,
+  CaretRight,
   ChartBar,
   Code,
   Compass,
@@ -241,7 +242,7 @@ function FollowUps({ items, onAsk, isSending, label }) {
   )
 }
 
-function ProjectCard({ project, language, onOpenProject }) {
+function ProjectCard({ project, language, onOpenProject, displayIndex }) {
   const copy = projectCopy(project, language)
   const metrics = (PRIMARY_METRICS[project.id] || [0, 1])
     .map((index) => project.metrics[index])
@@ -251,7 +252,7 @@ function ProjectCard({ project, language, onOpenProject }) {
     <article className="portfolio-response__project-card">
       <div className="portfolio-response__project-cover">
         <img src={project.heroImage} alt="" loading="lazy" />
-        <span className="mono">{project.index}</span>
+        <span className="mono">{String(displayIndex ?? project.index).padStart(2, '0')}</span>
       </div>
       <div className="portfolio-response__project-body">
         <p className="portfolio-response__eyebrow mono">{copy.category}</p>
@@ -280,6 +281,87 @@ function ProjectCard({ project, language, onOpenProject }) {
   )
 }
 
+function ProjectEvidenceRow({ project, language, onOpenProject, displayIndex }) {
+  const copy = projectCopy(project, language)
+  const metricIndex = PRIMARY_METRICS[project.id]?.[0] ?? 0
+  const metric = project.metrics[metricIndex] || project.metrics[0]
+
+  const content = (
+    <>
+      <img
+        className="portfolio-response__evidence-image"
+        src={project.heroImage}
+        alt={`${copy.title || project.title} project cover`}
+        loading="lazy"
+      />
+      <span className="portfolio-response__evidence-copy">
+        <span className="portfolio-response__evidence-eyebrow mono">
+          <span>{String(displayIndex).padStart(2, '0')}</span>
+          {copy.category}
+        </span>
+        <strong>{copy.title || project.title}</strong>
+        <span className="portfolio-response__evidence-summary">{copy.summary}</span>
+        {metric && (
+          <span className="portfolio-response__evidence-metric">
+            <b>{metric.value}</b>
+            <span>{metricLabel(metric, language)}</span>
+          </span>
+        )}
+      </span>
+      <CaretRight className="portfolio-response__evidence-arrow" size={24} aria-hidden="true" />
+    </>
+  )
+
+  if (!onOpenProject) {
+    return <article className="portfolio-response__evidence-row">{content}</article>
+  }
+
+  return (
+    <button
+      type="button"
+      className="portfolio-response__evidence-row"
+      onClick={() => onOpenProject(project)}
+      aria-label={`${language === 'es' ? 'Abrir' : 'Open'} ${copy.title || project.title}`}
+    >
+      {content}
+    </button>
+  )
+}
+
+function ProjectEvidenceList({ projectList, language, onOpenProject, onAsk, isSending }) {
+  const followUpQuestion = FOLLOW_UPS.carousel[language][0].question
+
+  return (
+    <div className="portfolio-response__evidence-list">
+      <div className="portfolio-response__evidence-rows">
+        {projectList.map((project, index) => (
+          <ProjectEvidenceRow
+            project={project}
+            language={language}
+            onOpenProject={onOpenProject}
+            displayIndex={index + 1}
+            key={project.id}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        className="portfolio-response__evidence-followup"
+        onClick={() => onAsk(followUpQuestion)}
+        disabled={isSending}
+      >
+        <Sparkle size={18} weight="fill" aria-hidden="true" />
+        <span>
+          {language === 'es'
+            ? '¿Quieres ver métricas, procesos o decisiones de alguno de estos casos?'
+            : 'Would you like to see metrics, process, or decisions from one of these cases?'}
+        </span>
+        <CaretRight size={21} aria-hidden="true" />
+      </button>
+    </div>
+  )
+}
+
 function ProjectCarousel({ projectList, language, onOpenProject, onAsk, isSending }) {
   const trackRef = useRef(null)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -303,17 +385,25 @@ function ProjectCarousel({ projectList, language, onOpenProject, onAsk, isSendin
 
   return (
     <>
+      <ProjectEvidenceList
+        projectList={projectList}
+        language={language}
+        onOpenProject={onOpenProject}
+        onAsk={onAsk}
+        isSending={isSending}
+      />
       <div
         className="portfolio-response__carousel"
         ref={trackRef}
         onScroll={updateIndex}
         aria-label={language === 'es' ? 'Proyectos relacionados' : 'Related projects'}
       >
-        {projectList.map((project) => (
+        {projectList.map((project, index) => (
           <ProjectCard
             project={project}
             language={language}
             onOpenProject={onOpenProject}
+            displayIndex={index + 1}
             key={project.id}
           />
         ))}
@@ -609,9 +699,23 @@ export default function PortfolioResponse({ message, onAsk, onOpenProject, isSen
   const rich = !['narrative', 'suggestions'].includes(message.presentation?.kind)
   const lead = responseLead(message.content, { rich, maxLength: rich ? 220 : 620 })
   const kind = message.presentation?.kind || 'narrative'
+  const mobileLead = lead?.endsWith(':') ? `${lead.slice(0, -1)} clave.` : lead
 
   return (
     <div className="portfolio-response" data-kind={kind}>
+      {kind === 'project-carousel' && (
+        <>
+          <div className="portfolio-response__activity">
+            <span aria-hidden="true"><Sparkle size={18} weight="fill" /></span>
+            <p>
+              {language === 'es'
+                ? `Revisé ${projects.length} casos del portafolio`
+                : `I reviewed ${projects.length} portfolio cases`}
+            </p>
+          </div>
+          <h2 className="portfolio-response__mobile-lead">{mobileLead}</h2>
+        </>
+      )}
       {lead && (
         <div className="portfolio-response__lead">
           <p>{lead}</p>

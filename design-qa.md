@@ -1,3 +1,121 @@
+# Design QA — Selected mobile portfolio guide
+
+## Source visual truth
+
+- Approved mobile direction: `/Users/mateoespinosa/.codex/generated_images/019fe208-fe38-7ca0-a45b-9153cd2cf5a3/exec-6daf3a8b-d4a0-4551-93a7-08f20486a4b7.png`
+- Source dimensions: 853 × 1844 px.
+- Source state: expanded mobile conversation answering “¿Qué productos financieros ha diseñado Mateo?” with an editorial project list and fixed voice/send composer.
+- Product constraints retained: vintage project covers in chat, real case-study media inside each project, a subtle animated Three.js AI signal in the initial prompt, and response layouts selected by question intent.
+
+## Implementation evidence
+
+- Mobile implementation: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-mobile-evidence.png`
+- Normalized side-by-side comparison, source left and implementation right: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-mobile-comparison.png`
+- Desktop regression state: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-desktop-regression.png`
+- Local URL: `http://localhost:4173/#chat`
+- Mobile viewport: 393 × 852 CSS px at 1×. The source was normalized to the same viewport in the comparison.
+- Desktop regression viewport: 1280 × 720 CSS px.
+
+## Full-view and focused comparison
+
+- The implementation matches the approved hierarchy: compact back/header row, right-aligned question capsule, assistant activity line, two-line editorial headline, three evidence rows, contextual follow-up and fixed composer.
+- Spacing and vertical landmarks were checked at full resolution. The activity line begins at 173 px, the project list at 282 px and the composer at 763 px in the 852 px viewport; the transcript fits without meaningful auto-scroll (`scrollTop` ≤ 0.5 px from fractional layout rounding).
+- Project covers use the existing MiBanco, Credicorp Capital and Dando assets with grayscale/sepia treatment. The implementation intentionally shows documented portfolio metrics (`14 → 4:30`, `US$1.2B`, `+158%`) instead of the generated reference's illustrative values.
+- The composer keeps only voice and send, with a pronounced orange-to-gold border, warm shadow and 44 × 44 px touch targets. The back control also exposes a 44 × 44 px target while preserving the compact visual alignment.
+- Desktop keeps the existing three-card carousel, contextual rail and expanded-case behavior; the mobile evidence list and back control remain hidden there.
+
+## Primary interactions and adaptive behavior
+
+- Selecting “Productos financieros” opens the focused full-screen mobile conversation and renders three project evidence actions.
+- Opening MiBanco from the evidence list launches the existing accessible project dialog with real case content.
+- Closing the expanded chat only changes presentation state; messages and evidence remain mounted in the canvas.
+- Metrics, process, role, profile and project questions continue to use their distinct existing presentation contracts; the new evidence-list treatment is scoped to the mobile multi-project carousel response.
+- The initial state keeps the small Three.js orb and the same voice/send composer.
+
+## Iteration history
+
+1. Added the mobile-only evidence-list presentation while preserving the desktop carousel and all other adaptive response formats.
+2. Hid site navigation, HUD and sibling canvas sections only while the mobile conversation is expanded, removing page-content bleed.
+3. Matched the approved 393 × 852 composition, then corrected the header scale, headline wrap, project-image proportions and transcript overflow.
+4. Strengthened the composer gradient/shadow and expanded the back, voice and send hit areas to 44 px.
+5. Rechecked the complete mobile state against the normalized source and verified the desktop regression state.
+
+## Findings
+
+- No actionable P0, P1 or P2 findings remain.
+- [P3 — intentional data fidelity] Credicorp Capital and Dando use the real portfolio covers, summaries and documented metrics rather than the generated reference's illustrative building/phone photography and placeholder values.
+- [P3 — intentional responsive specialization] The approved evidence rows are mobile-only; desktop retains the previously approved card carousel because it better uses the available canvas width.
+
+## Validation
+
+- 30 automated tests passed.
+- `npm run lint` passed.
+- `npm run build` passed. The existing Three.js chunk-size advisory remains non-blocking.
+- Browser checks confirmed the 393 × 852 layout, 44 px primary touch targets, project opening and desktop carousel visibility.
+
+## Final result
+
+passed
+
+---
+
+# Design QA — Persistent editorial AI canvas
+
+## Source visual truth
+
+- Approved initial state: `/Users/mateoespinosa/.codex/generated_images/019fe208-fe38-7ca0-a45b-9153cd2cf5a3/exec-a8cd6d70-9d46-4548-8ee5-4cde0b0675d9.png`
+- Approved conversation state: `/Users/mateoespinosa/.codex/generated_images/019fe208-fe38-7ca0-a45b-9153cd2cf5a3/exec-acb7b569-4784-45fc-a363-448976feb59c.png`
+- Source dimensions: 1536 × 1024 px for both desktop states.
+- Final user constraints: the Three.js figure must remain small and subtle, use smooth motion, and the input container must expose only voice and send controls.
+
+## Implementation evidence
+
+- Desktop initial state: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-initial-threejs.png`
+- Desktop persistent conversation: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-conversation-persistent.png`
+- Initial side-by-side comparison: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-initial-comparison.png`
+- Conversation side-by-side comparison: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-conversation-comparison.png`
+- Mobile initial state: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-mobile-threejs.png`
+- Mobile conversation: `/Users/mateoespinosa/Personales/Portfolios/Portfolio-v2/design-qa-chat-mobile-conversation.png`
+- Local URL: `http://localhost:4173/`
+- Desktop viewport: 1536 × 1024 CSS px. Mobile viewport: 390 × 844 CSS px.
+
+## Full-view comparison
+
+- The implementation matches the approved editorial split: contextual rail, quiet header, generous warm-paper canvas, centered AI prompt and a wide low-contrast composer.
+- The initial headline now remains on one line at the reference desktop width and wraps deliberately on mobile.
+- The Three.js object is intentionally more restrained than the early reference: six translucent amber lobes surround a dark core at 104 px desktop and 83 px mobile. It reacts to pointer movement and transitions between idle, typing, listening and thinking states without becoming the primary visual element.
+- The conversation state keeps the user question, serif assistant lead, three vintage project cards, metrics, case actions, pagination and contextual follow-ups in the embedded canvas.
+- Project cards are numbered within the response (`01–03`) to match the approved conversation composition.
+
+## Behavior and accessibility checks
+
+- Sending the first question changes the same embedded surface from `starter` to `conversation`; there is no replacement hero and no floating launcher.
+- Expanding the chat only changes the positioning of that same surface. Closing or pressing Escape returns it to the canvas with the same message state.
+- The composer contains exactly two native buttons: `Iniciar dictado por voz` and `Enviar mensaje`.
+- Dictation uses the browser Speech Recognition API when available and presents a non-blocking fallback message when microphone access or recognition is unavailable.
+- The orb animation pauses offscreen or while the document is hidden, caps device-pixel ratio, disposes Three.js resources, and renders a static state for `prefers-reduced-motion`.
+- Mobile keeps one full project card plus a preview of the next. The document width remained 390 px at a 390 px viewport; horizontal overflow is isolated to the intended carousel and suggestion row.
+- Form labels, live status text, transcript semantics, button labels, focus styling and reduced-motion behavior remain available.
+
+## Findings
+
+- No actionable P0, P1 or P2 findings remain.
+- [P3 — intentional control reduction] Attachment and search actions shown in the visual reference are omitted because the final requirement explicitly limits the composer to voice and send.
+- [P3 — intentional motion restraint] The implemented orb has lower visual mass and slower deformation than the original reference, matching the user's request for a smaller, subtler AI signal.
+
+## Validation
+
+- 30 automated tests passed.
+- `npm run lint` passed.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+## Final result
+
+passed
+
+---
+
 # Design QA — Adaptive portfolio chat
 
 ## Source visual truth
