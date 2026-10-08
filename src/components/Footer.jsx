@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { scrollToTarget, reducedMotion } from '../lib/scroll'
+import { profile } from '../data/profile'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -27,7 +28,17 @@ export default function Footer() {
     <footer className="footer container" id="contact" ref={rootRef}>
       <h2 className="visually-hidden">Contact</h2>
       <p className="footer-lead">Complex product, clear next move.</p>
-      <p className="footer-mail">Let&rsquo;s build something useful.</p>
+      <a className="footer-mail" href={`mailto:${profile.contact.email}`} data-cursor="link">
+        {profile.contact.email}
+      </a>
+      <div className="footer-links">
+        <a href={profile.contact.linkedin} target="_blank" rel="noreferrer" data-cursor="link">
+          LinkedIn ↗
+        </a>
+        <a href="#experience" onClick={(event) => { event.preventDefault(); scrollToTarget('#experience') }} data-cursor="link">
+          Experience ↗
+        </a>
+      </div>
       <div className="footer-meta">
         <p>Bogotá, Colombia · Working across Latin America</p>
         <p className="mono">Product design · Frontend · AI</p>

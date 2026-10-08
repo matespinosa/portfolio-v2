@@ -2,6 +2,9 @@
 
 Interactive Vite + React portfolio with a hybrid guide grounded in the content of the site.
 
+The content migration from the previous Framer portfolio, review evidence and prioritized editorial
+backlog are documented in [the portfolio review](docs/portfolio-review/README.md).
+
 ## Local setup
 
 ```bash

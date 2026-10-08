@@ -2,12 +2,16 @@ export const profile = {
   name: 'Mateo Espinosa',
   location: 'Bogotá, Colombia',
   title: 'Product Designer with frontend experience',
+  contact: {
+    email: 'matespinosa09@gmail.com',
+    linkedin: 'https://www.linkedin.com/in/mateo-espinosa/',
+  },
   summary:
     'Mateo has more than six years of experience across digital products and frontend, including more than five years focused on product design.',
   currentRole: {
     company: 'Rappi',
     role: 'Product Designer · Merchants',
-    tenure: '8+ months',
+    tenure: '2025 – present',
     scope:
       'Restaurants and Mi Tienda, including the unification of Portal Partners and Portal Aliados using Rappi DS.',
   },
@@ -24,4 +28,3 @@ export const chatSuggestions = [
   'How does frontend experience shape his design work?',
   'What is Mateo currently building at Rappi?',
 ]
-

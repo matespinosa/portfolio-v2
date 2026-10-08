@@ -103,7 +103,7 @@ export default function Globe() {
         <h2 className="section-title" id="world-title">
           Products across <em>Latin America</em>
         </h2>
-        <p className="section-sub">Four products, nine markets</p>
+        <p className="section-sub">Four companies with a regional presence</p>
       </header>
 
       <div className="world-stage">
@@ -136,9 +136,9 @@ export default function Globe() {
 
         <div className="world-side">
           <p className="world-lead">
-            Product design for {CLIENTS.map((c) => c.name).join(', ')}. The complete world map
-            stays visible, Colombia anchors the view, and each point marks a market touched by
-            the work.
+            My work connects product teams at {CLIENTS.map((c) => c.name).join(', ')}.
+            The map shows the regional footprint of these companies; each case study
+            describes my own scope. Bogotá is my base.
           </p>
 
           <ul className="world-clients">

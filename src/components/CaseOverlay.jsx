@@ -11,6 +11,15 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
   const closeRef = useRef(null)
   const lastFocused = useRef(null)
   const closing = useRef(false)
+  const lightboxRef = useRef(null)
+  const lightboxCloseRef = useRef(null)
+  const lightboxTrigger = useRef(null)
+  // Stored with the project id so a swap to another case never shows a stale image.
+  const [viewer, setViewer] = useState(null)
+  const viewerIndex = viewer && current && viewer.id === current.id ? viewer.index : null
+  const viewerOpen = viewerIndex !== null
+  const viewerIndexRef = useRef(null)
+  viewerIndexRef.current = viewerIndex
 
   // Open / swap / close driven by the `project` prop.
   useLayoutEffect(() => {
@@ -72,7 +81,7 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
         { clipPath: 'inset(100% 0% 0% 0%)' },
         { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.8, ease: 'expo.inOut' }
       )
-      gsap.from('.case-hero-inner > *, .case-close', {
+      gsap.from('.case-hero-inner > *, .case-cover, .case-close', {
         y: 24,
         autoAlpha: 0,
         duration: 0.7,
@@ -85,11 +94,59 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current])
 
-  // Escape to close.
+  function openViewer(index, trigger) {
+    lightboxTrigger.current = trigger
+    setViewer({ id: current.id, index })
+  }
+
+  function closeViewer() {
+    setViewer(null)
+    lightboxTrigger.current?.focus?.()
+  }
+
+  function stepViewer(delta) {
+    setViewer((state) => {
+      if (!state) return state
+      const total = projects.find((p) => p.id === state.id)?.gallery.length || 1
+      return { ...state, index: (state.index + delta + total) % total }
+    })
+  }
+
+  // Move focus into the lightbox when it opens.
+  useEffect(() => {
+    if (viewerOpen) lightboxCloseRef.current?.focus()
+  }, [viewerOpen])
+
+  // Keep keyboard navigation inside the open case and restore focus on close.
   useEffect(() => {
     if (!current) return
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
+      const viewing = viewerIndexRef.current !== null
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        if (viewing) closeViewer()
+        else onClose()
+        return
+      }
+      if (viewing && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+        e.preventDefault()
+        stepViewer(e.key === 'ArrowRight' ? 1 : -1)
+        return
+      }
+      if (e.key !== 'Tab') return
+      const scope = viewing ? lightboxRef.current : rootRef.current
+      if (!scope) return
+      const controls = [...scope.querySelectorAll('button, a[href], input, textarea, select, [tabindex="0"]')]
+        .filter((element) => !element.disabled && element.getClientRects().length)
+      const first = controls[0]
+      const last = controls.at(-1)
+      if (e.shiftKey && (document.activeElement === first || !scope.contains(document.activeElement))) {
+        e.preventDefault()
+        last?.focus()
+      } else if (!e.shiftKey && (document.activeElement === last || !scope.contains(document.activeElement))) {
+        e.preventDefault()
+        first?.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -98,6 +155,8 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
   if (!current) return null
 
   const next = projects[(projects.findIndex((p) => p.id === current.id) + 1) % projects.length]
+  // Year only when it is a date; some projects use the client name there.
+  const heroYear = current.year.match(/\d{4}(?:\s*[–-]\s*\d{4})?/)?.[0]
 
   return createPortal(
     <div
@@ -121,20 +180,27 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
       </button>
       <div className="case-scroll" ref={scrollRef} data-lenis-prevent>
         <header className="case-hero">
-          <img
-            className="case-cover-img"
-            src={current.heroImage}
-            alt={`${current.title} project cover`}
-            width="2048"
-            height="1536"
-          />
-          <div className="case-hero-inner container">
-            <h2 className="case-title" id="case-title">
-              {current.title}
-            </h2>
-            <p className="case-cat">
-              {current.category} · {current.year}
-            </p>
+          <div className="case-hero-grid container">
+            <div className="case-hero-inner">
+              <span className="case-index">{current.index} — Case study</span>
+              <span className="case-client mono">{current.client}</span>
+              <h2 className="case-title" id="case-title">
+                {current.name || current.title}
+              </h2>
+              <p className="case-cat">
+                {current.category}
+                {heroYear && ` · ${heroYear}`}
+              </p>
+            </div>
+            <figure className="case-cover" data-fit={current.heroFit}>
+              <img
+                className="case-cover-img"
+                src={current.heroImage}
+                alt={`${current.title} project cover`}
+                width="2048"
+                height="1536"
+              />
+            </figure>
           </div>
         </header>
         <div className="case-body container">
@@ -152,12 +218,13 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
               <dd>{current.team}</dd>
             </div>
             <div>
-              <dt>Duration</dt>
+              <dt>Engagement</dt>
               <dd>{current.duration}</dd>
             </div>
           </dl>
           <div className="case-text">
             <p>{current.intro}</p>
+            {current.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             {current.sections.map((section) => (
               <section className="case-section" key={section.title}>
                 <h3>{section.title}</h3>
@@ -172,25 +239,36 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
               </section>
             ))}
           </div>
-          <section className="case-metrics" aria-label={`${current.title} project metrics`}>
-            {current.metrics.map((metric) => (
-              <div className="case-metric" key={metric.label}>
-                <strong>{metric.value}</strong>
-                <span>{metric.label}</span>
-                <small>{metric.detail}</small>
-              </div>
-            ))}
-          </section>
+          {current.metrics.length > 0 ? (
+            <section className="case-metrics" aria-label={`${current.title} project metrics`}>
+              {current.metrics.map((metric) => (
+                <div className="case-metric" key={metric.label}>
+                  <strong>{metric.value}</strong>
+                  <span>{metric.label}</span>
+                  <small>{metric.detail}</small>
+                </div>
+              ))}
+            </section>
+          ) : (
+            <p className="case-metrics-note">{current.metricsNote}</p>
+          )}
           <section className="case-gallery" aria-label={`${current.title} project gallery`}>
-            {current.gallery.map((image) => (
+            {current.gallery.map((image, index) => (
               <figure className="case-gallery-item" key={image.src}>
-                <img src={image.src} alt={image.alt} loading="lazy" />
+                <button
+                  type="button"
+                  onClick={(e) => openViewer(index, e.currentTarget)}
+                  aria-label={`View full image: ${image.label}`}
+                  data-cursor="view"
+                >
+                  <img src={image.src} alt={image.alt} loading="lazy" />
+                </button>
                 <figcaption className="mono">{image.label}</figcaption>
               </figure>
             ))}
           </section>
           <section className="case-outcome-panel">
-            <h3>Selected outcomes</h3>
+            <h3>{current.outcomesLabel || 'Selected outcomes'}</h3>
             <ul className="case-outcomes">
               {current.outcomes.map((outcome) => (
                 <li key={outcome}>{outcome}</li>
@@ -208,6 +286,58 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
           </button>
         </div>
       </div>
+      {viewerIndex !== null && (
+        <div
+          className="case-lightbox"
+          ref={lightboxRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={current.gallery[viewerIndex].label}
+          onClick={closeViewer}
+        >
+          <button
+            type="button"
+            className="case-lightbox-close"
+            ref={lightboxCloseRef}
+            onClick={closeViewer}
+            data-cursor="link"
+          >
+            <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.4" />
+            </svg>
+            Close
+          </button>
+          <figure className="case-lightbox-figure" onClick={(e) => e.stopPropagation()}>
+            <img src={current.gallery[viewerIndex].src} alt={current.gallery[viewerIndex].alt} />
+            <figcaption className="mono">
+              {current.gallery[viewerIndex].label} · {viewerIndex + 1}/{current.gallery.length}
+            </figcaption>
+          </figure>
+          {current.gallery.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="case-lightbox-nav"
+                data-dir="prev"
+                aria-label="Previous image"
+                onClick={(e) => { e.stopPropagation(); stepViewer(-1) }}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                className="case-lightbox-nav"
+                data-dir="next"
+                aria-label="Next image"
+                onClick={(e) => { e.stopPropagation(); stepViewer(1) }}
+              >
+                →
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
     </div>,
     document.body
   )

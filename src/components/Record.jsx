@@ -27,7 +27,7 @@ export default function Record() {
   }, [])
 
   return (
-    <section className="record container" ref={rootRef} aria-label="Clients and experience">
+    <section className="record container" id="experience" ref={rootRef} aria-label="Clients and experience">
       <div className="record-col">
         <h2>Selected clients</h2>
         <ul className="record-list">
@@ -44,10 +44,11 @@ export default function Record() {
         <h2>Experience</h2>
         <ul className="record-list">
           {experience.map((e) => (
-            <li key={e.org}>
+            <li key={`${e.org}-${e.span}`}>
               <span className="record-primary">{e.org}</span>
               <span className="record-secondary">{e.role}</span>
               <span className="record-year mono">{e.span}</span>
+              <p className="record-summary">{e.summary}</p>
             </li>
           ))}
         </ul>

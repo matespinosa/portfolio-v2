@@ -85,3 +85,25 @@ test('cleans markdown and extracts a compact lead', () => {
   )
   assert.equal(responseLead(value, { rich: true }), 'Participó en estos proyectos:')
 })
+
+test('treats demonstrative references to earlier answers as follow-ups', () => {
+  assert.equal(isPortfolioFollowUp('¿Cuál de esos tuvo más impacto?'), true)
+  assert.equal(isPortfolioFollowUp('Which of those had more impact?'), true)
+})
+
+test('keeps whole sentences when clipping long leads', () => {
+  const value =
+    'Mateo diseñó productos para banca minorista y crédito digital. En MiBanco redujo la apertura de cuenta de 14 minutos a 4:30 y aumentó las cuentas nuevas en un 32% durante el primer trimestre.'
+  const lead = responseLead(value, { maxLength: 90 })
+
+  assert.equal(lead, 'Mateo diseñó productos para banca minorista y crédito digital.')
+  assert.equal(responseLead(value, { maxLength: 400 }), value)
+  assert.ok(responseLead('palabra '.repeat(30), { maxLength: 60 }).endsWith('…'))
+})
+
+test('routes who-is questions to the experience profile', () => {
+  assert.equal(
+    classifyPortfolioPresentation({ question: '¿Quién es Mateo?', answer: answer() }).topic,
+    'experience',
+  )
+})

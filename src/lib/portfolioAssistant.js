@@ -1,6 +1,16 @@
 import Fuse from 'fuse.js'
 import { profile } from '../data/profile.js'
-import { projects, selectedClients } from '../data/projects.js'
+import { experience, projects, selectedClients } from '../data/projects.js'
+import {
+  CURRENT_ROLE_ES,
+  EXPERIENCE_ES,
+  EXPERIENCE_SPAN_ES,
+  METRIC_DETAILS_ES,
+  METRIC_LABELS_ES,
+  PROCESS_COPY_ES,
+  PROCESS_TITLES_EN,
+  SHORT_TITLES,
+} from '../data/copyEs.js'
 
 const SUGGESTIONS = {
   en: [
@@ -20,13 +30,19 @@ const PROJECT_ALIASES = {
   mibanco: ['mibanco', 'mi banco', 'cdt', 'cdts'],
   credicorp: ['credicorp', 'credicorp capital', 'corporate fx'],
   dando: ['dando', 'dando by cfg', 'cfg partners', 'libranza'],
+  kapital: ['kapital', 'kapital bank', 'kapital colombia', 'factoring', 'cesionbnk', 'radian'],
 }
+
+const GREETINGS = ['hola', 'buenas', 'buenos dias', 'buenas tardes', 'hello', 'hi', 'hey', 'good morning']
+
+const UNDOCUMENTED_ORGS = ['banca mifel', 'mifel']
 
 const PROJECT_TOPICS = {
   modyo: ['dxp', 'digital experience platform', 'design system', 'sistema de diseno', 'low code', 'micro frontend'],
   mibanco: ['onboarding', 'transactions', 'transacciones', 'payments', 'pagos', 'credit', 'credito', 'digital banking'],
   credicorp: ['corporate fx', 'foreign exchange', 'divisas', 'treasury', 'tesoreria', 'cambio', 'backoffice'],
   dando: ['digital lending', 'prestamos digitales', 'lending', 'kyc', 'backoffice', 'simulador', 'loan simulator'],
+  kapital: ['factoring', 'facturas', 'invoices', 'factura electronica', 'e-invoice', 'radian', 'cesion', 'working capital', 'capital de trabajo', 'pymes', 'sme financing'],
 }
 
 const PROJECT_ES = {
@@ -46,7 +62,7 @@ const PROJECT_ES = {
   },
   credicorp: {
     category: 'banca corporativa y divisas',
-    role: 'Product Designer enfocado en discovery y rebranding',
+    role: 'Senior Product Designer enfocado en discovery y rebranding',
     scope: 'transacciones, backoffice, FX y formularios de cumplimiento',
     summary: 'Mateo convirtió un proceso telefónico de FX en una experiencia digital para negociar, reservar y liquidar operaciones de divisas.',
     outcomes: ['US$1.2B transados digitalmente en los primeros seis meses', '96% de reducción en el tiempo del ciclo de liquidación', '340 horas de operaciones ahorradas al mes'],
@@ -58,6 +74,13 @@ const PROJECT_ES = {
     summary: 'Mateo transformó el proceso de crédito de CFG Partners en una experiencia 100% digital sin perder la cercanía humana.',
     outcomes: ['+158% de nuevos clientes después del MVP', '+233% de solicitudes procesadas después del MVP', '+45% de ganancia neta en eficiencia operativa'],
   },
+  kapital: {
+    category: 'financiamiento para pymes y factoring',
+    role: 'Lead Product Designer de principio a fin',
+    scope: 'benchmark, reglas de negocio, integración con CesionBnk y RADIAN, y el dashboard de factoring',
+    summary: 'Mateo lideró de principio a fin el producto de factoring de Kapital en Colombia, desde el benchmark y las reglas de negocio hasta el dashboard con el que las pymes financian sus facturas.',
+    outcomes: ['Dashboard de factoring con búsqueda, filtros y seguimiento de operaciones', 'Estados claros para validación, aprobación y desembolso de facturas', 'Resumen de operación con descuento, total a financiar y monto a recibir'],
+  },
 }
 
 const DELIVERY_ES = {
@@ -65,10 +88,37 @@ const DELIVERY_ES = {
   mibanco: { team: 'producto, research, desarrollo, QA y branding', duration: 'un proyecto de principio a fin' },
   credicorp: { team: 'clientes corporativos, tesorería, operaciones e ingeniería', duration: 'una iniciativa de plataforma' },
   dando: { team: 'CFG Partners, ventas, riesgo, tesorería e ingeniería', duration: 'una colaboración para el MVP' },
+  kapital: { team: 'la Country Manager de Colombia, producto México y Colombia, comercial, contabilidad e ingeniería', duration: 'el lanzamiento del producto en 2025' },
 }
 
 const SPANISH_MARKERS = new Set([
   'actualmente',
+  'con',
+  'cuales',
+  'cuanto',
+  'cuantos',
+  'de',
+  'del',
+  'el',
+  'en',
+  'es',
+  'fue',
+  'gracias',
+  'hizo',
+  'hola',
+  'impacto',
+  'las',
+  'los',
+  'mas',
+  'proceso',
+  'quien',
+  'rol',
+  'sabe',
+  'sus',
+  'tiene',
+  'tuvo',
+  'una',
+  'usa',
   'anos',
   'banca',
   'clientes',
@@ -90,6 +140,17 @@ const SPANISH_MARKERS = new Set([
 
 const ENGLISH_MARKERS = new Set([
   'about',
+  'and',
+  'has',
+  'he',
+  'hello',
+  'his',
+  'is',
+  'me',
+  'tell',
+  'the',
+  'thanks',
+  'to',
   'clients',
   'current',
   'designed',
@@ -117,6 +178,10 @@ const GENERIC_TOKENS = new Set([
   'diseno',
   'does',
   'esta',
+  'bank',
+  'banco',
+  'banca',
+  'banking',
   'hace',
   'mateo',
   'para',
@@ -182,6 +247,43 @@ function toThirdPerson(text) {
     .replace(/\bI also\b/g, 'Mateo also')
     .replace(/\bI use\b/g, 'Mateo uses')
     .replace(/\bmy\b/g, 'his')
+    .replace(/\b(Designer) I (?=[a-z]+ed\b|led\b)/g, '$1, Mateo ')
+    .replace(/\bI (?=[a-z]+ed\b|led\b)/g, 'Mateo ')
+    .replace(/(^|[.!?]\s+)We\b/g, '$1The team')
+    .replace(/\bwe\b/g, 'the team')
+    .replace(/\basked us\b/g, 'asked the team')
+    .replace(/\bour\b/g, "the team's")
+}
+
+function titleOf(project) {
+  return SHORT_TITLES[project.id] || project.title
+}
+
+function metricText(metric, language) {
+  if (language !== 'es') return `${metric.value} ${metric.label} (${metric.detail})`
+  return `${metric.value} ${METRIC_LABELS_ES[metric.label] || metric.label} (${METRIC_DETAILS_ES[metric.detail] || metric.detail})`
+}
+
+function metricShortText(metric, language) {
+  const label = language === 'es' ? METRIC_LABELS_ES[metric.label] || metric.label : metric.label
+  return `${metric.value} ${label}`
+}
+
+function processTitles(project, language, limit = 4) {
+  if (language === 'es') {
+    return (PROCESS_COPY_ES[project.id] || []).slice(0, limit).map((step) => step.title.toLowerCase())
+  }
+  return (PROCESS_TITLES_EN[project.id] || []).slice(0, limit)
+}
+
+function lowerFirst(value) {
+  return value.replace(/^(?!Modyo)([A-Z])(?=[a-z])/, (letter) => letter.toLowerCase())
+}
+
+function joinList(items, language) {
+  if (items.length < 2) return items.join('')
+  const conjunction = language === 'es' ? 'y' : 'and'
+  return `${items.slice(0, -1).join(', ')} ${conjunction} ${items.at(-1)}`
 }
 
 const searchRecords = projects.map((project) => ({
@@ -284,47 +386,45 @@ function projectIntent(context) {
 
 function answerProject(project, intent, language, confidence = 'high') {
   if (intent === 'unsupported-metrics') {
-    const metrics = project.metrics.map((metric) => `${metric.value} ${metric.label} (${metric.detail})`)
+    const metrics = project.metrics.map((metric) => metricText(metric, language))
+    const text = metrics.length > 0
+      ? (language === 'es'
+          ? `Las métricas documentadas para ${titleOf(project)} son:\n${bulletList(metrics)}`
+          : `The documented metrics for ${titleOf(project)} are:\n${bulletList(metrics)}`)
+      : (language === 'es'
+          ? `Las métricas de negocio de ${titleOf(project)} aún no están publicadas. El caso documenta el alcance y los entregables de diseño, sin atribuirles resultados medidos.`
+          : `Business metrics for ${titleOf(project)} have not been published. The case documents the scope and design deliverables without claiming measured results.`)
     return makeAnswer({
       language,
       projectIds: [project.id],
       confidence: 'high',
-      text:
-        language === 'es'
-          ? `Las métricas documentadas para ${project.title} son:\n${bulletList(metrics)}`
-          : `The documented metrics for ${project.title} are:\n${bulletList(metrics)}`,
+      text,
     })
   }
+
+  const name = titleOf(project)
 
   if (language === 'es') {
     const copy = PROJECT_ES[project.id]
     const delivery = DELIVERY_ES[project.id]
     const answers = {
       overview: `${copy.summary}\n\nSu rol fue ${copy.role} y el alcance incluyó ${copy.scope}.`,
-      role: `En ${project.title}, Mateo trabajó como ${copy.role}. Su responsabilidad cubrió ${copy.scope}.`,
-      scope: `El trabajo de Mateo en ${project.title} abarcó ${copy.scope}. ${copy.summary}`,
-      outcomes: `Los resultados documentados para ${project.title} son:\n${bulletList(copy.outcomes)}`,
-      process: `El proceso de ${project.title} conectó investigación, diseño, validación e implementación. El caso documenta ${project.sections
-        .filter((section) => section.title !== 'My role')
-        .slice(0, 4)
-        .map((section) => section.title.toLowerCase())
-        .join(', ')}.`,
-      delivery: `Mateo trabajó en ${project.title} junto con ${delivery.team}. El portafolio describe la duración como ${delivery.duration}.`,
+      role: `En ${name}, Mateo trabajó como ${copy.role}. Su responsabilidad cubrió ${copy.scope}.`,
+      scope: `El trabajo de Mateo en ${name} abarcó ${copy.scope}. ${copy.summary}`,
+      outcomes: `${project.outcomesLabel ? 'Los entregables de diseño documentados' : 'Los resultados documentados'} para ${name} son:\n${bulletList(copy.outcomes)}`,
+      process: `El proceso de ${name} conectó investigación, diseño, validación e implementación. El caso documenta ${joinList(processTitles(project, language), language)}.`,
+      delivery: `Mateo trabajó en ${name} junto con ${delivery.team}. El portafolio describe la duración como ${delivery.duration}.`,
     }
     return makeAnswer({ text: answers[intent], language, projectIds: [project.id], confidence })
   }
 
   const answers = {
-    overview: `${toThirdPerson(project.intro)}\n\nMateo worked as ${project.role}. The scope covered ${project.scope}.`,
-    role: `On ${project.title}, Mateo worked as ${project.role}. His responsibility covered ${project.scope}.`,
-    scope: `Mateo's work on ${project.title} covered ${project.scope}. ${toThirdPerson(project.intro)}`,
-    outcomes: `The documented outcomes for ${project.title} are:\n${bulletList(project.outcomes)}`,
-    process: `The ${project.title} process connected research, design, validation and implementation. The case documents ${project.sections
-      .filter((section) => section.title !== 'My role')
-      .slice(0, 4)
-      .map((section) => section.title.toLowerCase())
-      .join(', ')}.`,
-    delivery: `Mateo worked on ${project.title} with ${project.team.toLowerCase()}. The portfolio describes the duration as ${project.duration.toLowerCase()}.`,
+    overview: `${toThirdPerson(project.intro)}\n\nMateo worked as ${project.role}. The scope covered ${lowerFirst(project.scope)}.`,
+    role: `On ${name}, Mateo worked as ${project.role}. His responsibility covered ${lowerFirst(project.scope)}.`,
+    scope: `Mateo's work on ${name} covered ${lowerFirst(project.scope)}. ${toThirdPerson(project.intro)}`,
+    outcomes: `The documented ${project.outcomesLabel ? 'design deliverables' : 'outcomes'} for ${name} are:\n${bulletList(project.outcomes)}`,
+    process: `The ${name} process connected research, design, validation and implementation. The case documents ${joinList(processTitles(project, language), language)}.`,
+    delivery: `Mateo worked on ${name} with ${project.team.toLowerCase()}. The portfolio describes the duration as ${project.duration.toLowerCase()}.`,
   }
   return makeAnswer({ text: answers[intent], language, projectIds: [project.id], confidence })
 }
@@ -337,37 +437,29 @@ function answerProjectSet(matchedProjects, language, intent = 'overview') {
         overview: `${copy.category}; ${copy.scope}`,
         role: `${copy.role}; ${copy.scope}`,
         scope: copy.scope,
-        process: project.sections
-          .filter((section) => section.title !== 'My role')
-          .slice(0, 3)
-          .map((section) => section.title)
-          .join(' · '),
+        process: processTitles(project, 'es', 3).join(' · '),
         outcomes: copy.outcomes.slice(0, 2).join('; '),
         'unsupported-metrics': project.metrics
           .slice(0, 2)
-          .map((metric) => `${metric.value} ${metric.label}`)
-          .join('; '),
+          .map((metric) => metricShortText(metric, 'es'))
+          .join('; ') || 'métricas de negocio aún no publicadas',
         delivery: DELIVERY_ES[project.id].team,
       }
-      return `${project.title} — ${variants[intent] || variants.overview}.`
+      return `${titleOf(project)} — ${variants[intent] || variants.overview}.`
     }
     const variants = {
       overview: `${project.category}; ${project.scope}`,
       role: `${project.role}; ${project.scope}`,
       scope: project.scope,
-      process: project.sections
-        .filter((section) => section.title !== 'My role')
-        .slice(0, 3)
-        .map((section) => section.title)
-        .join(' · '),
+      process: processTitles(project, 'en', 3).join(' · '),
       outcomes: project.outcomes.slice(0, 2).join('; '),
       'unsupported-metrics': project.metrics
         .slice(0, 2)
-        .map((metric) => `${metric.value} ${metric.label}`)
-        .join('; '),
+        .map((metric) => metricShortText(metric, 'en'))
+        .join('; ') || 'business metrics not yet published',
       delivery: project.team,
     }
-    return `${project.title} — ${variants[intent] || variants.overview}.`
+    return `${titleOf(project)} — ${variants[intent] || variants.overview}.`
   })
 
   const introductions = {
@@ -404,7 +496,7 @@ function answerAllProjects(language, financialOnly = false) {
     : projects
   const lines = selected.map((project) => {
     const category = language === 'es' ? PROJECT_ES[project.id].category : project.category
-    return `${project.title} — ${category}`
+    return `${titleOf(project)} — ${category}`
   })
 
   return makeAnswer({
@@ -414,18 +506,27 @@ function answerAllProjects(language, financialOnly = false) {
       language === 'es'
         ? `${
             financialOnly
-              ? 'Mateo ha diseñado productos financieros en tres contextos:'
-              : 'El portafolio presenta cuatro casos de producto:'
+              ? 'Mateo ha diseñado productos financieros en cuatro contextos:'
+              : 'El portafolio presenta cinco casos de producto:'
           }\n${bulletList(lines)}`
         : `${
             financialOnly
-              ? 'Mateo has designed financial products across three contexts:'
-              : 'The portfolio presents four product cases:'
+              ? 'Mateo has designed financial products across four contexts:'
+              : 'The portfolio presents five product cases:'
           }\n${bulletList(lines)}`,
   })
 }
 
 function answerUnsupported(context, language) {
+  if (matchesAny(context, ['contact', 'contacto', 'contactar', 'email', 'correo', 'linkedin']) &&
+      !matchesAny(context, ['salary', 'compensation', 'age', 'phone', 'address', 'salario', 'sueldo', 'edad', 'teléfono', 'telefono', 'dirección', 'direccion'])) {
+    return makeAnswer({
+      language,
+      text: language === 'es'
+        ? `Puedes contactar a Mateo en ${profile.contact.email} o a través de LinkedIn: ${profile.contact.linkedin}`
+        : `You can contact Mateo at ${profile.contact.email} or on LinkedIn: ${profile.contact.linkedin}`,
+    })
+  }
   if (!matchesAny(context, ['salary', 'compensation', 'age', 'phone', 'email', 'address', 'salario', 'sueldo', 'edad', 'teléfono', 'telefono', 'correo', 'dirección', 'direccion'])) {
     return null
   }
@@ -454,10 +555,32 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
     })
   }
 
+  if (context.tokens.size <= 3 && matchesAny(context, GREETINGS)) {
+    return makeAnswer({
+      language,
+      text:
+        language === 'es'
+          ? 'Hola, soy la guía del portafolio de Mateo. Puedes preguntarme por sus proyectos, resultados, rol actual en Rappi o práctica frontend.'
+          : "Hi, I'm the guide to Mateo's portfolio. Ask me about his projects, results, current role at Rappi or frontend practice.",
+    })
+  }
+
   const exactMatches = exactProjectMatches(context)
   const intent = projectIntent(context)
 
-  if (intent === 'unsupported-metrics' && exactMatches.length) {
+  if (!exactMatches.length && matchesAny(context, UNDOCUMENTED_ORGS)) {
+    const list = projects.map((project) => `${titleOf(project)} — ${language === 'es' ? PROJECT_ES[project.id].category : project.category}`)
+    return makeAnswer({
+      language,
+      projectIds: projects.map((project) => project.id),
+      text:
+        language === 'es'
+          ? `Ese trabajo no está documentado como caso en este portafolio. Los casos publicados son:\n${bulletList(list)}`
+          : `That work is not documented as a case in this portfolio. The published cases are:\n${bulletList(list)}`,
+    })
+  }
+
+  if (intent === 'unsupported-metrics' && exactMatches.length === 1) {
     return answerProject(exactMatches[0], intent, language)
   }
 
@@ -475,13 +598,13 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
     return answerProjectSet(contextualProjects, language, intent)
   }
 
-  if (matchesAny(context, ['current role', 'currently', 'now', 'rol actual', 'actualmente', 'ahora', 'dónde trabaja', 'donde trabaja'])) {
+  if (matchesAny(context, ['current role', 'currently', 'now', 'rappi', 'merchants', 'mi tienda', 'rol actual', 'actualmente', 'ahora', 'dónde trabaja', 'donde trabaja'])) {
     return makeAnswer({
       language,
       projectIds: ['rappi'],
       text:
         language === 'es'
-          ? `Mateo trabaja actualmente como Product Designer en Merchants de ${profile.currentRole.company}. Su alcance cubre Restaurantes y Mi Tienda, incluida la unificación de Portal Partners y Portal Aliados mediante Rappi DS.`
+          ? `Mateo trabaja actualmente como Product Designer en Merchants de ${profile.currentRole.company}. Su alcance cubre ${CURRENT_ROLE_ES.scope.charAt(0).toLowerCase()}${CURRENT_ROLE_ES.scope.slice(1)}`
           : `Mateo currently works as ${profile.currentRole.role} at ${profile.currentRole.company}. His scope covers Restaurants and Mi Tienda, including the unification of Portal Partners and Portal Aliados using Rappi DS.`,
     })
   }
@@ -492,7 +615,7 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
       text:
         language === 'es'
           ? 'Mateo tiene experiencia con React, Next.js, HTML, CSS y JavaScript. Usa ese conocimiento para evaluar viabilidad, crear prototipos y colaborar más cerca de ingeniería.'
-          : profile.frontend,
+          : 'Mateo has experience with React, Next.js, HTML, CSS and JavaScript. He uses that implementation knowledge to improve feasibility, prototyping and collaboration with engineering.',
     })
   }
 
@@ -506,13 +629,17 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
     })
   }
 
-  if (matchesAny(context, ['experience', 'background', 'career', 'years', 'trajectory', 'roles', 'employment', 'history', 'experiencia', 'trayectoria', 'carrera', 'años', 'anos', 'cargos', 'experiencia laboral', 'historial'])) {
+  if (matchesAny(context, ['engineers', 'engineering', 'developers', 'ingenieria', 'ingenieros', 'desarrolladores', 'handoff'])) {
+    return answerProjectSet(projects, language, 'delivery')
+  }
+
+  if (matchesAny(context, ['who is', 'quien es', 'experience', 'background', 'career', 'years', 'trajectory', 'roles', 'employment', 'history', 'experiencia', 'trayectoria', 'carrera', 'años', 'anos', 'cargos', 'experiencia laboral', 'historial'])) {
     return makeAnswer({
       language,
       text:
         language === 'es'
-          ? 'Mateo tiene más de seis años de experiencia entre productos digitales y frontend, incluidos más de cinco años enfocados en diseño de producto. Su trayectoria combina productos financieros, plataformas operativas y sistemas de diseño.'
-          : `${profile.summary} His background combines financial products, operational platforms and design systems.`,
+          ? `Mateo tiene más de seis años de experiencia entre productos digitales y frontend, incluidos más de cinco años enfocados en diseño de producto. Su trayectoria publicada es:\n${bulletList(experience.map((item) => `${item.org} · ${EXPERIENCE_ES[item.org] || item.role} · ${EXPERIENCE_SPAN_ES[item.span] || item.span}`))}`
+          : `${profile.summary} His published experience is:\n${bulletList(experience.map((item) => `${item.org} · ${item.role} · ${item.span}`))}`,
     })
   }
 
@@ -524,6 +651,10 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
           ? `Mateo está basado en ${profile.location}.`
           : `Mateo is based in ${profile.location}.`,
     })
+  }
+
+  if (matchesAny(context, ['design system', 'design systems', 'component system', 'sistema de diseño', 'sistemas de diseño', 'sistema de componentes'])) {
+    return answerProject(projectById('modyo'), 'scope', language)
   }
 
   if (matchesAny(context, ['clients', 'companies', 'organizations', 'worked with', 'clientes', 'empresas', 'organizaciones', 'trabajado con'])) {
@@ -542,12 +673,12 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
     return answerAllProjects(language, true)
   }
 
-  if (matchesAny(context, ['design system', 'design systems', 'component system', 'sistema de diseño', 'sistemas de diseño', 'sistema de componentes'])) {
-    return answerProject(projectById('modyo'), 'scope', language)
-  }
-
   const fuzzyMatch = fuzzyProjectMatch(context)
   if (fuzzyMatch) return answerProject(fuzzyMatch, intent, language, 'medium')
+
+  if (['unsupported-metrics', 'outcomes', 'process', 'role'].includes(intent)) {
+    return answerProjectSet(projects, language, intent)
+  }
 
   if (matchesAny(context, ['projects', 'portfolio', 'case studies', 'work', 'proyectos', 'portafolio', 'casos', 'trabajos'])) {
     return answerAllProjects(language)
@@ -559,7 +690,7 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
       text:
         language === 'es'
           ? 'La práctica de Mateo cubre estrategia de producto, productos financieros, operaciones para comercios, onboarding, transacciones, crédito, sistemas de diseño y flujos B2B complejos.'
-          : profile.design,
+          : "Mateo's practice covers product strategy, financial products, merchant operations, onboarding, transactions, credit products, design systems and complex B2B workflows.",
     })
   }
 

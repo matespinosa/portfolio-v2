@@ -13,6 +13,17 @@ test('uses local answers for a clear first question', () => {
   assert.deepEqual(prepared.projectIds, ['mibanco'])
 })
 
+test('provides missing-metric context to the model without fabricated Kapital results', () => {
+  const prepared = preparePortfolioRequest('What metrics did Kapital achieve?', [])
+  const context = JSON.parse(prepared.context)
+
+  assert.equal(context.projects.length, 1)
+  assert.deepEqual(context.projects[0].metrics, [])
+  assert.match(context.projects[0].metricsNote, /not been published/)
+  assert.equal(context.projects[0].outcomesLabel, 'Design deliverables')
+  assert.doesNotMatch(prepared.context, /TODO/)
+})
+
 test('uses conversation history to scope a follow-up to its project', () => {
   const prepared = preparePortfolioRequest('¿Y qué resultados tuvo?', [
     { role: 'user', content: '¿Qué hizo en MiBanco?' },

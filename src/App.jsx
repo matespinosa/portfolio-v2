@@ -27,6 +27,7 @@ const SECTIONS = [
   { id: '#work', label: 'Selected work' },
   { id: '#world', label: 'Markets' },
   { id: '#practice', label: 'Practice' },
+  { id: '#experience', label: 'Experience' },
   { id: '#contact', label: 'Contact' },
 ]
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ArrowUp,
   ArrowsOutSimple,
@@ -47,7 +48,7 @@ export default function PortfolioChat({ onOpenProject }) {
   const [isSending, setIsSending] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [voiceFeedback, setVoiceFeedback] = useState('')
-  const [assistantStatus, setAssistantStatus] = useState({ label: 'Local · Ready', state: 'ready' })
+  const [assistantStatus, setAssistantStatus] = useState({ label: 'Local · Listo', state: 'ready' })
   const [remainingRequests, setRemainingRequests] = useState(null)
   const stageRef = useRef(null)
   const inputRef = useRef(null)
@@ -55,6 +56,10 @@ export default function PortfolioChat({ onOpenProject }) {
   const latestAssistantRef = useRef(null)
   const recognitionRef = useRef(null)
   const shouldFollowRef = useRef(true)
+  const sectionRef = useRef(null)
+  const lastScrolledIdRef = useRef(null)
+  const [frozenHeight, setFrozenHeight] = useState(null)
+  const [sectionInView, setSectionInView] = useState(true)
 
   const questionCount = useMemo(
     () => messages.filter((message) => message.role === 'user').length,
@@ -80,6 +85,12 @@ export default function PortfolioChat({ onOpenProject }) {
     if (assistantStatus.state === 'limited') return 'Local · Respaldo'
     return `${source} · Activo`
   }, [assistantStatus])
+
+  const openPanel = useCallback(() => {
+    // Keep the section's height while the stage is lifted into the drawer so the page does not jump.
+    setFrozenHeight(sectionRef.current?.offsetHeight || null)
+    setPanelOpen(true)
+  }, [])
 
   const closePanel = useCallback(() => {
     setPanelOpen(false)
@@ -140,6 +151,9 @@ export default function PortfolioChat({ onOpenProject }) {
   useEffect(() => {
     const latestMessage = messages.at(-1)
     if (latestMessage?.role === 'assistant') {
+      // Only react to a new answer; opening or closing the drawer must not move the page.
+      if (lastScrolledIdRef.current === latestMessage.id) return
+      lastScrolledIdRef.current = latestMessage.id
       window.requestAnimationFrame(() => {
         const assistantMessages = messages.filter((message) => message.role === 'assistant')
         if (panelOpen) {
@@ -164,6 +178,17 @@ export default function PortfolioChat({ onOpenProject }) {
       behavior: 'smooth',
     })
   }, [messages, panelOpen])
+
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section || !('IntersectionObserver' in window)) return undefined
+    const observer = new IntersectionObserver(
+      ([entry]) => setSectionInView(entry.isIntersecting),
+      { threshold: 0.2 },
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const focusChat = (event) => {
@@ -241,7 +266,7 @@ export default function PortfolioChat({ onOpenProject }) {
     setVoiceFeedback('')
     setIsSending(true)
     setAssistantStatus({
-      label: canAnswerLocally ? 'Local · Thinking' : 'Gemini · Thinking',
+      label: canAnswerLocally ? 'Local · Pensando' : 'Gemini · Pensando',
       state: 'thinking',
     })
 
@@ -273,17 +298,17 @@ export default function PortfolioChat({ onOpenProject }) {
 
     if (answer.source === 'gemini') {
       setAssistantStatus({
-        label: `Gemini · ${answer.remaining} left today`,
+        label: `Gemini · ${answer.remaining} restantes hoy`,
         state: 'ready',
       })
     } else if (answer.reason?.includes('daily-limit')) {
-      setAssistantStatus({ label: 'Local · Daily limit', state: 'limited' })
+      setAssistantStatus({ label: 'Local · Límite diario', state: 'limited' })
     } else if (['configuration', 'rate-limit-unavailable'].includes(answer.reason)) {
-      setAssistantStatus({ label: 'Local · Setup incomplete', state: 'limited' })
+      setAssistantStatus({ label: 'Local · Configuración pendiente', state: 'limited' })
     } else if (['offline', 'gemini-unavailable'].includes(answer.reason)) {
-      setAssistantStatus({ label: 'Local · Offline', state: 'limited' })
+      setAssistantStatus({ label: 'Local · Sin conexión', state: 'limited' })
     } else {
-      setAssistantStatus({ label: 'Local · Ready', state: 'ready' })
+      setAssistantStatus({ label: 'Local · Listo', state: 'ready' })
     }
 
     setIsSending(false)
@@ -380,7 +405,39 @@ export default function PortfolioChat({ onOpenProject }) {
   }
 
   return (
-    <section className="portfolio-chat container" id="chat" aria-label="Mateo portfolio guide">
+    <section className="portfolio-chat container" id="chat"
+      ref={sectionRef}
+      style={panelOpen && !mobileChat && frozenHeight ? { minHeight: frozenHeight } : undefined}
+      aria-label="Mateo portfolio guide"
+    >
+      {panelOpen && (
+        <div className="portfolio-chat__placeholder">
+          <span className="mono">Guía del portafolio</span>
+          <p>La conversación sigue en el panel lateral.</p>
+          <button type="button" onClick={closePanel}>
+            Volver aquí
+          </button>
+        </div>
+      )}
+      {createPortal(
+        <>
+          {panelOpen && <div className="portfolio-chat__scrim" onClick={closePanel} aria-hidden="true" />}
+          <button
+            type="button"
+            className="portfolio-chat__launcher"
+            data-visible={!panelOpen && !sectionInView ? 'true' : 'false'}
+            onClick={openPanel}
+            aria-controls="portfolio-chat-surface"
+            aria-expanded={panelOpen}
+            tabIndex={!panelOpen && !sectionInView ? 0 : -1}
+          >
+            <Sparkle size={16} weight="fill" aria-hidden="true" />
+            <span>{responseCount > 0 ? 'Seguir conversación' : 'Pregúntale al portafolio'}</span>
+            {responseCount > 0 && <span className="portfolio-chat__launcher-count">{responseCount}</span>}
+          </button>
+        </>,
+        document.body,
+      )}
       <div
         className="portfolio-chat__stage"
         ref={stageRef}
@@ -399,7 +456,7 @@ export default function PortfolioChat({ onOpenProject }) {
           </div>
 
           <div className="portfolio-chat__rail-conversation">
-            <p className="mono">Conversation</p>
+            <p className="mono">Conversación</p>
             <strong>
               {questionCount} {questionCount === 1 ? 'pregunta' : 'preguntas'} · {responseCount}{' '}
               {responseCount === 1 ? 'respuesta' : 'respuestas'}
@@ -424,7 +481,7 @@ export default function PortfolioChat({ onOpenProject }) {
 
           <div className="portfolio-chat__rail-note">
             <p>Pregunta sobre proyectos, decisiones de producto, práctica frontend o el rol actual de Mateo en Rappi.</p>
-            <span className="mono">Ask anything.</span>
+            <span className="mono">Pregunta lo que quieras.</span>
           </div>
         </aside>
 
@@ -462,7 +519,7 @@ export default function PortfolioChat({ onOpenProject }) {
               <button
                 type="button"
                 className="portfolio-chat__expand"
-                onClick={() => setPanelOpen((open) => !open)}
+                onClick={() => (panelOpen ? closePanel() : openPanel())}
                 aria-controls="portfolio-chat-surface"
                 aria-expanded={panelOpen}
                 aria-label={panelOpen ? 'Cerrar vista ampliada' : 'Ampliar conversación'}
@@ -495,6 +552,7 @@ export default function PortfolioChat({ onOpenProject }) {
               <div
                 className="portfolio-chat__transcript"
                 ref={transcriptRef}
+                data-lenis-prevent
                 role="log"
                 aria-label="Conversación con Mateo portfolio guide"
                 aria-live="polite"

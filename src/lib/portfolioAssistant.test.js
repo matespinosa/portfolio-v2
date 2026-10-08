@@ -7,7 +7,7 @@ test('answers broad financial-product questions in Spanish', () => {
 
   assert.equal(answer.language, 'es')
   assert.equal(answer.confidence, 'high')
-  assert.deepEqual(answer.projectIds, ['mibanco', 'credicorp', 'dando'])
+  assert.deepEqual(answer.projectIds, ['mibanco', 'credicorp', 'dando', 'kapital'])
   assert.match(answer.text, /MiBanco/)
   assert.match(answer.text, /Dando by CFG/)
 })
@@ -26,6 +26,34 @@ test('answers career-role questions from the documented experience', () => {
 
   assert.equal(answer.confidence, 'high')
   assert.match(answer.text, /más de seis años/i)
+  assert.match(answer.text, /Kapital Bank/)
+  assert.match(answer.text, /Credicorp Capital/)
+  assert.match(answer.text, /Modyo Services/)
+  assert.match(answer.text, /Brace Developers/)
+})
+
+test('distinguishes unpublished Kapital metrics from delivered design work', () => {
+  const es = answerPortfolioQuestion('¿Cuáles son las métricas de Kapital?')
+  const en = answerPortfolioQuestion('What metrics did Kapital achieve?')
+  const outcomes = answerPortfolioQuestion('¿Qué resultados tuvo Kapital?')
+  const comparison = answerPortfolioQuestion('Compare metrics for Kapital and MiBanco')
+
+  assert.deepEqual(es.projectIds, ['kapital'])
+  assert.match(es.text, /aún no están publicadas/)
+  assert.match(en.text, /have not been published/)
+  assert.match(outcomes.text, /entregables de diseño/)
+  assert.match(comparison.text, /business metrics not yet published/)
+  for (const answer of [es, en, outcomes, comparison]) assert.doesNotMatch(answer.text, /TODO|undefined/)
+})
+
+test('answers public professional contact questions while withholding unpublished personal details', () => {
+  for (const question of ['¿Cuál es el correo de Mateo?', 'How can I contact Mateo?']) {
+    const answer = answerPortfolioQuestion(question)
+    assert.equal(answer.confidence, 'high')
+    assert.match(answer.text, /matespinosa09@gmail\.com/)
+    assert.match(answer.text, /linkedin\.com\/in\/mateo-espinosa/)
+  }
+  assert.equal(answerPortfolioQuestion('What is Mateo’s salary and email?').confidence, 'low')
 })
 
 test('answers AI-practice questions without treating AI as part of another word', () => {
@@ -87,4 +115,79 @@ test('redirects unrelated questions to supported portfolio topics', () => {
   assert.equal(answer.confidence, 'low')
   assert.deepEqual(answer.projectIds, [])
   assert.match(answer.text, /does not contain a verifiable answer/)
+})
+
+test('routes design-system questions ahead of the generic "worked with" clients answer', () => {
+  const answer = answerPortfolioQuestion('¿Ha trabajado con sistemas de diseño?')
+
+  assert.deepEqual(answer.projectIds, ['modyo'])
+})
+
+test('says undocumented organizations are not published cases instead of guessing a project', () => {
+  const answer = answerPortfolioQuestion('¿Ha trabajado con Banca Mifel?')
+
+  assert.match(answer.text, /no está documentado/)
+  assert.equal(answer.projectIds.length, 5)
+  assert.match(answerPortfolioQuestion('Did he work with Banca Mifel?').text, /not documented/)
+})
+
+test('answers Kapital questions from the factoring case study', () => {
+  for (const question of ['¿Qué hizo en Kapital Bank?', 'Tell me about the factoring project', '¿Cómo funciona CesionBnk en el factoring?']) {
+    const answer = answerPortfolioQuestion(question)
+
+    assert.deepEqual(answer.projectIds, ['kapital'])
+    assert.doesNotMatch(answer.text, /not documented|no está documentado/)
+  }
+})
+
+test('answers questions about Rappi from the current role', () => {
+  for (const question of ['¿Qué hizo en Rappi?', '¿Y en Rappi?']) {
+    const answer = answerPortfolioQuestion(question)
+
+    assert.equal(answer.confidence, 'high')
+    assert.deepEqual(answer.projectIds, ['rappi'])
+    assert.match(answer.text, /Merchants/)
+  }
+})
+
+test('compares all cases for project-less impact, process and role questions', () => {
+  const impact = answerPortfolioQuestion('¿Qué impacto tuvo su trabajo?')
+
+  assert.equal(impact.confidence, 'high')
+  assert.equal(impact.projectIds.length, 5)
+  assert.match(impact.text, /resultados documentados/)
+})
+
+test('keeps Spanish answers free of English metric labels and section titles', () => {
+  const metrics = answerPortfolioQuestion('¿Cuáles son las métricas de Credicorp?').text
+  const process = answerPortfolioQuestion('¿Cómo fue el proceso de diseño en MiBanco?').text
+
+  assert.match(metrics, /transado digitalmente \(primeros seis meses\)/)
+  assert.doesNotMatch(metrics, /traded digitally|first six months/)
+  assert.doesNotMatch(process, /the goal|curiosity to insight/i)
+})
+
+test('uses short project names in answers', () => {
+  const answer = answerPortfolioQuestion('¿Qué resultados tuvo MiBanco?')
+
+  assert.match(answer.text, /para MiBanco son/)
+  assert.doesNotMatch(answer.text, /Web app transaction/)
+})
+
+test('detects Spanish greetings and short follow-ups as Spanish', () => {
+  const greeting = answerPortfolioQuestion('hola')
+
+  assert.equal(greeting.language, 'es')
+  assert.match(greeting.text, /guía del portafolio/)
+  assert.equal(answerPortfolioQuestion('¿Cuál de esos tuvo más impacto?').language, 'es')
+})
+
+test('writes English project answers in the third person', () => {
+  const fx = answerPortfolioQuestion('Tell me about the FX module').text
+  const frontend = answerPortfolioQuestion('Does he know React?').text
+
+  assert.doesNotMatch(fx, /\bWe\b/)
+  assert.doesNotMatch(fx, /\bI\b/)
+  assert.match(frontend, /^Mateo has experience with React/)
+  assert.doesNotMatch(answerPortfolioQuestion('What did he do at MiBanco?').text, /\bI led\b/)
 })

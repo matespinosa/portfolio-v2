@@ -53,7 +53,7 @@ export default function Work({ onOpen }) {
         <h2 className="section-title" id="work-title">
           Selected <em>fieldwork</em>
         </h2>
-        <p className="section-sub">Four products, real responsibilities</p>
+        <p className="section-sub">Five products, real responsibilities</p>
       </header>
 
       <ul className="work-grid" data-inspect="Work / grid">

@@ -57,9 +57,11 @@ export default function About() {
         <div className="about-bio">
           <p>
             I am Mateo Espinosa, a product designer based in Bogotá with more than six years
-            across digital products and frontend. For over five years, my design work has
-            focused on financial products for teams including <strong>Rappi, Credicorp Capital,
-            Kapital Bank, MiBanco and Banca Mifel</strong>. Additional client work through Modyo
+            across digital products and frontend. I combine a business mindset, analytical
+            thinking and hands-on research to make complex decisions clear. My work spans
+            merchant platforms at <strong>Rappi</strong> and financial products for
+            <strong> Credicorp Capital, Kapital Bank, MiBanco and Banca Mifel</strong>.
+            Additional client work through Modyo
             includes Banco Mundo Mujer, Sura and PS Factory.
           </p>
           <p>
@@ -72,6 +74,10 @@ export default function About() {
           <div>
             <dt>Product</dt>
             <dd>Financial products, merchant operations, onboarding, transactions and complex B2B flows</dd>
+          </div>
+          <div>
+            <dt>Research</dt>
+            <dd>Customer interviews, benchmarks, journey maps, prioritization and usability testing</dd>
           </div>
           <div>
             <dt>Systems</dt>

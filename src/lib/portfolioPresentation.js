@@ -66,6 +66,8 @@ const PROFILE_TERMS = {
   frontend: ['frontend', 'front end', 'react', 'next.js', 'nextjs', 'html', 'css', 'javascript'],
   ai: ['artificial intelligence', 'ai practice', 'cursor', 'codex', 'claude', 'inteligencia artificial', 'ia'],
   experience: [
+    'who is',
+    'quien es',
     'experience',
     'background',
     'career',
@@ -133,6 +135,17 @@ const FOLLOW_UP_REFERENCES = [
   'ese proyecto',
   'esos proyectos',
   'ellos',
+  'ellas',
+  'ese',
+  'esa',
+  'esos',
+  'esas',
+  'estos',
+  'estas',
+  'those',
+  'these',
+  'which one',
+  'which of',
   'sus resultados',
   'su proceso',
   'su rol',
@@ -176,16 +189,27 @@ export function cleanAssistantText(value) {
     .trim()
 }
 
+function clipAtBoundary(text, maxLength) {
+  if (text.length <= maxLength) return text
+
+  const clipped = text.slice(0, maxLength)
+  const lastSentenceEnd = Math.max(
+    clipped.lastIndexOf('. '),
+    clipped.lastIndexOf('! '),
+    clipped.lastIndexOf('? '),
+  )
+  if (lastSentenceEnd >= maxLength * 0.4) return clipped.slice(0, lastSentenceEnd + 1).trim()
+
+  const lastSpace = clipped.lastIndexOf(' ')
+  return `${clipped.slice(0, lastSpace > maxLength * 0.7 ? lastSpace : maxLength).trim()}…`
+}
+
 export function responseLead(value, { rich = false, maxLength = 280 } = {}) {
   const clean = cleanAssistantText(value)
   if (!clean) return ''
 
   const firstBlock = rich ? clean.split(/\n+/).find(Boolean) || clean : clean
-  if (firstBlock.length <= maxLength) return firstBlock
-
-  const clipped = firstBlock.slice(0, maxLength)
-  const lastSpace = clipped.lastIndexOf(' ')
-  return `${clipped.slice(0, lastSpace > maxLength * 0.7 ? lastSpace : maxLength).trim()}…`
+  return clipAtBoundary(firstBlock, maxLength)
 }
 
 export function classifyPortfolioPresentation({ question, answer }) {

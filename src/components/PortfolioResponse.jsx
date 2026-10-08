@@ -16,6 +16,16 @@ import {
 import { experience, projects } from '../data/projects'
 import { profile } from '../data/profile'
 import { cleanAssistantText, responseLead } from '../lib/portfolioPresentation'
+import {
+  CURRENT_ROLE_ES,
+  EXPERIENCE_ES,
+  EXPERIENCE_ORG_ES,
+  EXPERIENCE_SPAN_ES,
+  METRIC_DETAILS_ES,
+  METRIC_LABELS_ES,
+  PROCESS_COPY_ES,
+  SECTION_LABELS_ES,
+} from '../data/copyEs'
 
 const PROJECT_COPY_ES = {
   modyo: {
@@ -38,89 +48,11 @@ const PROJECT_COPY_ES = {
     category: 'Crédito digital · KYC',
     summary: 'Diseñó préstamos 100% digitales con simulador y backoffice.',
   },
-}
-
-const METRIC_LABELS_ES = {
-  'dev time saved': 'tiempo de desarrollo',
-  'task success': 'éxito de tarea',
-  'UX improvement': 'mejora UX',
-  'sales prospects': 'prospectos comerciales',
-  'account opening': 'apertura de cuenta',
-  'system usability': 'usabilidad',
-  'perceived trust': 'confianza percibida',
-  'new accounts': 'cuentas nuevas',
-  'traded digitally': 'transado digitalmente',
-  'faster settlement': 'liquidación más rápida',
-  'ops time saved': 'ahorro operativo',
-  'spread revenue': 'ingresos por spread',
-  'new customers / month': 'clientes nuevos / mes',
-  'requests processed': 'solicitudes procesadas',
-  'new customers': 'clientes nuevos',
-  'operational efficiency': 'eficiencia operativa',
-}
-
-const METRIC_DETAILS_ES = {
-  'goal: 40%': 'meta: 40%',
-  'moderated tests': 'pruebas moderadas',
-  'resolved inconsistencies': 'inconsistencias resueltas',
-  'banks negotiating': 'bancos en negociación',
-  minutes: 'minutos',
-  'SUS score': 'puntaje SUS',
-  'clear messages and seals': 'mensajes y sellos claros',
-  'first post-launch quarter': 'primer trimestre post-lanzamiento',
-  'first six months': 'primeros seis meses',
-  'cycle-time reduction': 'reducción del ciclo',
-  'per month': 'por mes',
-  'faster deal flow': 'flujo de negociación más ágil',
-  'after MVP': 'después del MVP',
-  'MVP impact': 'impacto del MVP',
-  'net gain': 'ganancia neta',
-}
-
-const SECTION_LABELS_ES = {
-  'My role': 'Mi rol',
-  'The goal': 'El objetivo',
-  'Research & benchmark': 'Investigación y benchmark',
-  'Discovery & research': 'Discovery e investigación',
-  'Research & insights': 'Investigación e insights',
-  'Design system': 'Sistema de diseño',
-  'Making the design system': 'Sistema de diseño',
-  'Building the design system': 'Sistema de diseño',
-  'Modyo 10 & low-code onboarding': 'Modyo 10 y onboarding low-code',
-  'An experience with purpose': 'Experiencia de producto',
-  'Solution overview': 'Solución',
-  'Feature deep dive': 'Diseño de la solución',
-  'Iteration design': 'Validación e iteración',
-  'Opening the door to the user': 'Experiencia del usuario',
-  'The engine inside: sales backoffice': 'Backoffice comercial',
-  'Testing and impact': 'Pruebas e impacto',
-}
-
-const PROCESS_COPY_ES = {
-  modyo: [
-    { title: 'Investigación', body: 'Diez entrevistas revelaron fricción en la arquitectura, la terminología y la documentación.' },
-    { title: 'Fundamentos', body: 'Definió una paleta accesible, tipografía modular y más de 60 componentes compartidos.' },
-    { title: 'Prototipado', body: 'Validó Modyo 10 y las herramientas low-code con los equipos que usaban la experiencia anterior.' },
-    { title: 'Implementación', body: 'Acompañó PR reviews, QA y documentación viva para cerrar la brecha con ingeniería.' },
-  ],
-  mibanco: [
-    { title: 'Discovery', body: 'Escuchó a 12 clientes actuales y potenciales para entender fricción, confianza y lenguaje financiero.' },
-    { title: 'Sistema de diseño', body: 'Construyó una base accesible con Atomic Design para alinear diseño, desarrollo y QA.' },
-    { title: 'Experiencia', body: 'Conectó onboarding, transacciones, crédito y CDTs en una relación bancaria coherente.' },
-    { title: 'Validación', body: 'Dos rondas de pruebas moderadas confirmaron claridad, confianza y menor tiempo de apertura.' },
-  ],
-  credicorp: [
-    { title: 'Discovery', body: 'Mapeó cinco sistemas y observó a ocho tesoreros ejecutando operaciones mensuales de FX.' },
-    { title: 'Arquitectura del flujo', body: 'Conectó cotización, cumplimiento, liquidación y trazabilidad en un solo módulo.' },
-    { title: 'Prototipado', body: 'Diseñó cotizaciones en vivo, formularios automáticos y doble aprobación para operaciones sensibles.' },
-    { title: 'Validación', body: 'Iteró con tesoreros y cerró con un piloto de tres semanas sin errores de digitación.' },
-  ],
-  dando: [
-    { title: 'Investigación', body: 'Ocho sesiones con policías y militares revelaron barreras de confianza, distancia y documentación.' },
-    { title: 'Fundamentos', body: 'Creó en seis semanas una base accesible y componentes paramétricos para Figma y React.' },
-    { title: 'Experiencia digital', body: 'Diseñó simulación, KYC, firma y documentación para completar el crédito sin visitar una oficina.' },
-    { title: 'Operación', body: 'Un backoffice tipo CRM reemplazó Excel y correo con estados, permisos y acciones masivas.' },
-  ],
+  kapital: {
+    title: 'Kapital Colombia',
+    category: 'Factoring · financiamiento pymes',
+    summary: 'Lideró de principio a fin el factoring en Colombia sobre CesionBnk y RADIAN.',
+  },
 }
 
 const ROLE_COPY_ES = {
@@ -144,6 +76,11 @@ const ROLE_COPY_ES = {
     scope: 'Simulador de crédito, KYC, onboarding y backoffice comercial.',
     team: 'CFG Partners, ventas, riesgo, tesorería e ingeniería.',
   },
+  kapital: {
+    role: 'Lead Product Designer · De principio a fin',
+    scope: 'Benchmark, reglas de negocio, integración con CesionBnk y RADIAN, y dashboard de factoring.',
+    team: 'Country Manager Colombia, producto México y Colombia, comercial, contabilidad e ingeniería.',
+  },
 }
 
 const PRIMARY_METRICS = {
@@ -151,6 +88,7 @@ const PRIMARY_METRICS = {
   mibanco: [0, 3],
   credicorp: [0, 1],
   dando: [2, 3],
+  kapital: [0, 1],
 }
 
 const FOLLOW_UPS = {
@@ -453,15 +391,21 @@ function MetricGrid({ projectList, language, onOpenProject, onAsk, isSending }) 
                 </button>
               )}
             </header>
-            <dl>
-              {project.metrics.map((metric) => (
-                <div key={`${project.id}-${metric.value}-${metric.label}`}>
-                  <dd>{metric.value}</dd>
-                  <dt>{metricLabel(metric, language)}</dt>
-                  <small>{metricDetail(metric, language)}</small>
-                </div>
-              ))}
-            </dl>
+            {project.metrics.length > 0 ? (
+              <dl>
+                {project.metrics.map((metric) => (
+                  <div key={`${project.id}-${metric.value}-${metric.label}`}>
+                    <dd>{metric.value}</dd>
+                    <dt>{metricLabel(metric, language)}</dt>
+                    <small>{metricDetail(metric, language)}</small>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="portfolio-response__summary">
+                {language === 'es' ? 'Métricas de negocio aún no publicadas. El caso presenta los entregables de diseño.' : project.metricsNote}
+              </p>
+            )}
           </section>
         ))}
       </div>
@@ -597,9 +541,9 @@ function ProfileFacts({ topic, language }) {
           <li key={`${item.org}-${item.span}`}>
             <span aria-hidden="true" />
             <div>
-              <small className="mono">{item.span}</small>
-              <strong>{item.org}</strong>
-              <p>{item.role}</p>
+              <small className="mono">{language === 'es' ? EXPERIENCE_SPAN_ES[item.span] || item.span : item.span}</small>
+              <strong>{language === 'es' ? EXPERIENCE_ORG_ES[item.org] || item.org : item.org}</strong>
+              <p>{language === 'es' ? EXPERIENCE_ES[item.org] || item.role : item.role}</p>
             </div>
           </li>
         ))}
@@ -612,7 +556,9 @@ function ProfileFacts({ topic, language }) {
       icon: Briefcase,
       eyebrow: language === 'es' ? 'ROL ACTUAL' : 'CURRENT ROLE',
       title: profile.currentRole.company,
-      facts: [profile.currentRole.role, profile.currentRole.scope],
+      facts: language === 'es'
+        ? [CURRENT_ROLE_ES.role, CURRENT_ROLE_ES.scope]
+        : [profile.currentRole.role, profile.currentRole.scope],
     },
     frontend: {
       icon: Code,
@@ -696,10 +642,11 @@ function ProjectSpotlight({ project, language, onOpenProject, onAsk, isSending }
 export default function PortfolioResponse({ message, onAsk, onOpenProject, isSending }) {
   const language = message.language === 'es' ? 'es' : 'en'
   const projectList = useMemo(() => selectedProjects(message.projectIds), [message.projectIds])
-  const rich = !['narrative', 'suggestions'].includes(message.presentation?.kind)
-  const lead = responseLead(message.content, { rich, maxLength: rich ? 220 : 620 })
   const kind = message.presentation?.kind || 'narrative'
-  const mobileLead = lead?.endsWith(':') ? `${lead.slice(0, -1)} clave.` : lead
+  const rich = !['narrative', 'suggestions'].includes(kind)
+  const lead = responseLead(message.content, { rich, maxLength: rich ? 600 : 900 })
+  const headline = kind === 'project-carousel' ? responseLead(message.content, { rich: true, maxLength: 140 }) : ''
+  const mobileLead = headline?.endsWith(':') ? `${headline.slice(0, -1)} clave.` : headline
 
   return (
     <div className="portfolio-response" data-kind={kind}>
@@ -709,8 +656,8 @@ export default function PortfolioResponse({ message, onAsk, onOpenProject, isSen
             <span aria-hidden="true"><Sparkle size={18} weight="fill" /></span>
             <p>
               {language === 'es'
-                ? `Revisé ${projects.length} casos del portafolio`
-                : `I reviewed ${projects.length} portfolio cases`}
+                ? `Revisé ${projectList.length} casos del portafolio`
+                : `I reviewed ${projectList.length} portfolio cases`}
             </p>
           </div>
           <h2 className="portfolio-response__mobile-lead">{mobileLead}</h2>

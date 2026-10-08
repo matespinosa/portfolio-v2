@@ -16,6 +16,7 @@ function compactProject(project) {
     scope: project.scope,
     team: project.team,
     duration: project.duration,
+    sourceUrl: project.sourceUrl,
     intro: project.intro,
     body: project.body,
     sections: project.sections.map((section) => ({
@@ -24,6 +25,8 @@ function compactProject(project) {
       bullets: section.bullets || [],
     })),
     metrics: project.metrics,
+    metricsNote: project.metricsNote,
+    outcomesLabel: project.outcomesLabel,
     outcomes: project.outcomes,
   }
 }

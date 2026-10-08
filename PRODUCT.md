@@ -26,7 +26,9 @@ A code-aware product designer who makes dense financial and operational systems 
 - Secondary CTA: “About Mateo” → professional background and capabilities.
 - The line a visitor remembers: “Interfaces built like instruments.”
 - Belief ladder: (1) Mateo has precise product judgment → (2) he understands complex financial workflows → (3) he can connect design to frontend → (4) he uses AI to improve execution without outsourcing judgment.
-- Proof on hand: Rappi Merchants, MiBanco, Banca Mifel, Credicorp Capital and Kapital Bank.
+- Published cases: Modyo Platform, MiBanco, Credicorp Capital, Dando by CFG and Kapital Colombia.
+- Current experience: Rappi Merchants. A dedicated Rappi case still needs project evidence and results.
+- Contact: public email and LinkedIn from the previous portfolio.
 
 ## Brand Personality
 

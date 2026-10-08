@@ -20,7 +20,7 @@ const IDLE_DEMOS = [
   { command: 'chat', response: 'Ask the portfolio about Mateo’s work and experience.' },
   { command: 'work', response: 'Navigate to selected financial and merchant products.' },
   { command: 'ask fintech experience', response: 'Prepare a question for the local portfolio guide.' },
-  { command: 'open rappi', response: 'Open the Rappi Merchants case study.' },
+  { command: 'open kapital', response: 'Explore the Kapital Colombia factoring case study.' },
 ]
 
 export default function HeroTerminal() {

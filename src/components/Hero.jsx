@@ -141,8 +141,9 @@ export default function Hero({ ready }) {
           </h1>
 
           <p className="hero-sub">
-            Mateo Espinosa is a product designer with 6+ years across financial products,
-            frontend and design systems. Currently shaping merchant tools at Rappi.
+            I’m Mateo Espinosa, a product designer turning complex fintech and B2B flows
+            into clear, measurable experiences. 6+ years across design and frontend.
+            Currently shaping merchant tools at Rappi.
           </p>
 
           <div className="hero-actions">
