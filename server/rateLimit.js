@@ -65,7 +65,7 @@ export function createRateLimitStore(env = process.env) {
 }
 
 export async function reserveGeminiRequest({ request, redis, env = process.env, date = new Date() }) {
-  const globalLimit = positiveInteger(env.GEMINI_DAILY_LIMIT, 10)
+  const globalLimit = positiveInteger(env.GEMINI_DAILY_LIMIT, 15)
   const visitorLimit = Math.min(
     positiveInteger(env.GEMINI_VISITOR_DAILY_LIMIT, 5),
     globalLimit,

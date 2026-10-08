@@ -1344,10 +1344,14 @@ body[data-cursor-mode="label"] .cursor-dot {
 /* Desktop: the expanded guide is a right-side drawer over the page. */
 @media (min-width: 561px) {
   .portfolio-chat__stage[data-expanded="true"] {
-    inset: 0.75rem 0.75rem 0.75rem auto;
-    width: min(28rem, calc(100vw - 1.5rem));
+    inset: 0 0 0 auto;
+    width: min(max(32rem, 50vw), 100vw);
+    height: 100dvh;
     grid-template-columns: minmax(0, 1fr);
-    animation: portfolio-drawer-in var(--dur-med) var(--ease-out);
+    border-width: 0 0 0 1px;
+    border-radius: 0;
+    box-shadow: -2rem 0 4rem -2rem oklch(0.14 0.01 62 / 0.5);
+    animation: portfolio-drawer-in var(--dur-slow) var(--ease-expo);
   }
 
   .portfolio-chat__stage[data-expanded="true"] .portfolio-chat__rail {
@@ -1384,7 +1388,11 @@ body[data-cursor-mode="label"] .cursor-dot {
 }
 
 @keyframes portfolio-drawer-in {
-  from { transform: translateX(2rem); opacity: 0; }
+  from { transform: translateX(100%); }
+}
+
+@keyframes portfolio-scrim-in {
+  from { opacity: 0; }
 }
 
 html.portfolio-chat-expanded .portfolio-chat {
@@ -1395,38 +1403,150 @@ html.portfolio-chat-expanded .portfolio-chat {
   position: fixed;
   inset: 0;
   z-index: calc(var(--z-chat) - 1);
-  background: oklch(0.235 0.019 62 / 0.14);
+  background: oklch(0.14 0.01 62 / 0.58);
+  animation: portfolio-scrim-in var(--dur-med) var(--ease-out);
 }
 
-.portfolio-chat__placeholder {
-  position: absolute;
-  inset: 0;
+.portfolio-chat__summary {
+  width: 100%;
   display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 0.6rem;
-  text-align: center;
+  gap: 1.15rem;
+  margin-top: 0.9rem;
+  text-align: left;
+  padding: clamp(1.1rem, 2.4vw, 1.6rem);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  color: var(--ink);
 }
 
-.portfolio-chat__placeholder .mono {
+.portfolio-chat__summary-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.portfolio-chat__summary-mark {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--primary);
+}
+
+.portfolio-chat__summary-head .mono,
+.portfolio-chat__summary-last dt {
   color: var(--muted);
   font-size: 0.62rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.portfolio-chat__placeholder p {
+.portfolio-chat__summary-head h2 {
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  line-height: 1.1;
+  font-weight: 500;
+  line-height: 1.05;
 }
 
-.portfolio-chat__placeholder button {
-  padding: 0.55rem 1rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 99px;
-  background: none;
-  color: var(--ink);
+.portfolio-chat__summary-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portfolio-chat__summary-topics li {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
   font-size: var(--text-sm);
+}
+
+.portfolio-chat__summary-last {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding-block: 0.95rem;
+  border-block: 1px solid var(--line);
+}
+
+.portfolio-chat__summary-last > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.portfolio-chat__summary-last dd {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.portfolio-chat__summary-last dd[data-clamp] {
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.portfolio-chat__summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+}
+
+.portfolio-chat__summary-primary {
+  min-height: 2.75rem;
+  padding: 0.6rem 1.2rem;
+  border: 0;
+  border-radius: 99px;
+  background: var(--primary);
+  color: var(--surface-raised);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.portfolio-chat__summary-secondary {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.4rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.portfolio-chat__summary-secondary:disabled {
+  opacity: 0.5;
+}
+
+@media (max-width: 560px) {
+  .portfolio-chat__summary-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .portfolio-chat__summary-count {
+    grid-column: 1 / -1;
+  }
+
+  .portfolio-chat__summary-primary {
+    flex: 1 1 100%;
+  }
+}
+
+.portfolio-chat__backdrop {
+  pointer-events: none;
 }
 
 .portfolio-chat__launcher {
@@ -1485,10 +1605,18 @@ html.portfolio-chat-expanded .portfolio-chat {
 @media (max-width: 560px) {
   html.portfolio-chat-expanded {
     overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html.portfolio-chat-expanded body {
+    position: fixed;
+    top: var(--chat-page-top, 0px);
+    left: 0;
+    width: 100%;
   }
 
   .portfolio-chat__scrim,
-  .portfolio-chat__placeholder {
+  .portfolio-chat__backdrop {
     display: none;
   }
 
@@ -1624,6 +1752,7 @@ html.portfolio-chat-expanded .portfolio-chat {
 
 .portfolio-chat__header {
   min-height: 4.3rem;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1733,14 +1862,47 @@ html.portfolio-chat-expanded .portfolio-chat {
   text-align: center;
 }
 
-/* The orb ships its own gradient and highlight from the shader — no CSS
-   filters or glow layers on top, they flatten the glass. */
+.portfolio-chat__conversation {
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.portfolio-chat__stage[data-expanded="true"] .portfolio-chat__starter {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 561px) {
+  .portfolio-chat__stage[data-expanded="true"] .portfolio-chat__starter {
+    justify-content: flex-start;
+    padding: 1.25rem 2rem;
+  }
+
+  .portfolio-chat__stage[data-expanded="true"] .portfolio-ai-orb {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  .portfolio-chat__stage[data-expanded="true"] .portfolio-chat__starter h2 {
+    margin-top: 1rem;
+    font-size: 2rem;
+  }
+
+  .portfolio-chat__stage[data-expanded="true"] .portfolio-chat__composer[data-mode="starter"] {
+    margin-top: 1.4rem;
+  }
+}
+
+/* The orb ships its own fluid, halo and grain from the shader — no CSS
+   filters or glow layers on top. */
 .portfolio-ai-orb {
   position: relative;
   width: 12rem;
   height: 12rem;
   flex: 0 0 auto;
-  filter: drop-shadow(0 0.7rem 1.4rem oklch(0.63 0.15 52 / 0.1));
   transform: translateZ(0);
 }
 
@@ -1753,12 +1915,12 @@ html.portfolio-chat-expanded .portfolio-chat {
 .portfolio-ai-orb canvas[data-fallback="true"] {
   border-radius: 50%;
   background: radial-gradient(
-    circle at 38% 34%,
-    #2a1408 0 14%,
-    #7a3510 30%,
-    #d2701f 58%,
-    #ebc97a 78%,
-    transparent 88%
+    circle at 36% 34%,
+    #f6b545 0 16%,
+    #f07a3c 38%,
+    #e5484f 62%,
+    #f8d9cc 80%,
+    transparent 92%
   );
 }
 
@@ -1858,6 +2020,7 @@ html.portfolio-chat-expanded .portfolio-chat {
 
 .portfolio-chat__form textarea {
   width: 100%;
+  min-width: 0;
   max-height: 7rem;
   min-height: 1.7rem;
   flex: 1 1 auto;
@@ -2681,6 +2844,80 @@ html.portfolio-chat-expanded .portfolio-chat {
   line-height: 1.3;
 }
 
+.portfolio-response__overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.85rem;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+}
+
+.portfolio-response__overview > div {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.85rem 0.95rem;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.portfolio-response__overview > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.portfolio-response__overview > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.portfolio-response__overview dt {
+  color: var(--muted);
+  font-size: 0.56rem;
+}
+
+.portfolio-response__overview dd {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.portfolio-response__overview strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.portfolio-response__overview small {
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.portfolio-response[data-kind="profile-overview"] .portfolio-response__evidence-list {
+  margin-top: 0.85rem;
+}
+
+@media (min-width: 900px) {
+  .portfolio-response__overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .portfolio-response__overview > div {
+    border-bottom: 0;
+  }
+
+  .portfolio-response__overview > div:nth-child(2n) {
+    border-right: 1px solid var(--line);
+  }
+
+  .portfolio-response__overview > div:last-child {
+    border-right: 0;
+  }
+}
+
 .portfolio-response__timeline {
   display: grid;
   margin-top: 0.85rem;
@@ -3070,6 +3307,8 @@ html.portfolio-chat-expanded .portfolio-chat {
 
   .portfolio-chat__stage[data-expanded="true"] {
     min-height: 0;
+    inset: var(--chat-viewport-top, 0px) 0 auto;
+    height: var(--chat-viewport-height, 100dvh);
     background:
       radial-gradient(circle at 90% 0%, color-mix(in oklab, #e47747 4%, transparent), transparent 16rem),
       var(--surface);
@@ -3157,6 +3396,31 @@ html.portfolio-chat-expanded .portfolio-chat {
     min-height: calc(100dvh - 3.75rem);
     justify-content: center;
     padding: 2.4rem 1.15rem max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  .portfolio-chat__stage[data-expanded="true"] .portfolio-chat__starter {
+    min-height: 0;
+    padding-block: 1.25rem max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .portfolio-chat__stage[data-compact="true"] .portfolio-chat__starter {
+    justify-content: flex-end;
+    padding-top: 0.75rem;
+  }
+
+  .portfolio-chat__stage[data-compact="true"] .portfolio-ai-orb,
+  .portfolio-chat__stage[data-compact="true"] .portfolio-chat__starter > p,
+  .portfolio-chat__stage[data-compact="true"] .portfolio-chat__suggestions {
+    display: none;
+  }
+
+  .portfolio-chat__stage[data-compact="true"] .portfolio-chat__starter h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+  }
+
+  .portfolio-chat__stage[data-compact="true"] .portfolio-chat__composer[data-mode="starter"] {
+    margin-top: 1rem;
   }
 
   .portfolio-ai-orb {
@@ -3448,7 +3712,8 @@ html.portfolio-chat-expanded .portfolio-chat {
 
   .portfolio-chat__form textarea {
     padding-block: 0.42rem;
-    font-size: 0.9rem;
+    /* iOS zooms focused form controls below 16px. Keep browser zoom available. */
+    font-size: max(16px, 1rem);
   }
 
   .portfolio-chat__voice,
@@ -3470,6 +3735,8 @@ html.portfolio-chat-expanded .portfolio-chat {
   .portfolio-chat__voice-feedback {
     min-height: 0;
     margin-top: 0.3rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
   }
 
   .portfolio-chat__voice-feedback:empty,

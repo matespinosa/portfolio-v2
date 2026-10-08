@@ -101,9 +101,16 @@ test('keeps whole sentences when clipping long leads', () => {
   assert.ok(responseLead('palabra '.repeat(30), { maxLength: 60 }).endsWith('…'))
 })
 
-test('routes who-is questions to the experience profile', () => {
+test('uses the profile overview for portfolio-wide summaries', () => {
+  assert.deepEqual(
+    classifyPortfolioPresentation({
+      question: '¿Quién es Mateo?',
+      answer: { ...answer(['modyo', 'mibanco']), kind: 'profile-summary' },
+    }),
+    { kind: 'profile-overview', topic: 'profile' },
+  )
   assert.equal(
-    classifyPortfolioPresentation({ question: '¿Quién es Mateo?', answer: answer() }).topic,
+    classifyPortfolioPresentation({ question: '¿Cuál es su trayectoria?', answer: answer() }).topic,
     'experience',
   )
 })

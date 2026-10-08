@@ -23,7 +23,7 @@ assistant remains active.
 2. Deploy or import the repository as a Vercel project.
 3. In the Vercel Marketplace, create a free Upstash Redis database and connect it to the project.
 4. Add the variables from `.env.example` under Project Settings → Environment Variables.
-5. Keep `GEMINI_DAILY_LIMIT=10` for a strict global limit and
+5. Keep `GEMINI_DAILY_LIMIT=15` for a strict global limit and
    `GEMINI_VISITOR_DAILY_LIMIT=5` to prevent one visitor from consuming it all.
 6. Redeploy after adding or changing environment variables.
 

@@ -15,10 +15,10 @@ import { ORB_FRAGMENT, QUAD_VERTEX } from '../lib/gl/shaders'
 import { tokenHex } from '../lib/tokens'
 
 const STATE_ENERGY = {
-  idle: 0.24,
-  typing: 0.62,
-  listening: 1,
-  thinking: 1.18,
+  idle: 0,
+  typing: 0.4,
+  listening: 0.6,
+  thinking: 1,
 }
 
 const MAX_DPR = 1.75
@@ -58,15 +58,15 @@ export default function PortfolioAiOrb({ state = 'idle' }) {
         alpha: true,
         antialias: true,
         powerPreference: 'low-power',
-        premultipliedAlpha: false,
+        premultipliedAlpha: true,
       })
     } catch {
       canvas.dataset.fallback = 'true'
       return undefined
     }
 
-    // The shader emits sRGB already multiplied by the paper colour. Any tone
-    // mapping or extra colour-space pass would wash the amber out.
+    // The shader emits premultiplied sRGB. Any tone mapping or extra
+    // colour-space pass would wash the palette out.
     renderer.outputColorSpace = LinearSRGBColorSpace
     renderer.toneMapping = NoToneMapping
     renderer.setClearColor(0x000000, 0)
@@ -82,11 +82,15 @@ export default function PortfolioAiOrb({ state = 'idle' }) {
       uniforms: {
         uTime: { value: 0 },
         uEnergy: { value: STATE_ENERGY.idle },
+        uListen: { value: 0 },
+        uThink: { value: 0 },
+        uType: { value: 0 },
         uRes: { value: new Vector2(1, 1) },
         uPointer: { value: new Vector2() },
         uPaper: { value: tokenVector('--surface') },
       },
       transparent: true,
+      premultipliedAlpha: true,
       depthWrite: false,
       toneMapped: false,
     })
@@ -102,6 +106,9 @@ export default function PortfolioAiOrb({ state = 'idle' }) {
     let running = false
     let frame = 0
     let energy = STATE_ENERGY.idle
+    let listen = 0
+    let think = 0
+    let type = 0
 
     const resize = () => {
       const width = canvas.clientWidth || 192
@@ -115,12 +122,19 @@ export default function PortfolioAiOrb({ state = 'idle' }) {
     const draw = (now = performance.now()) => {
       const activeState = stateRef.current
       const targetEnergy = STATE_ENERGY[activeState] ?? STATE_ENERGY.idle
+      const ease = reduced ? 1 : 0.06
       energy = damp(energy, targetEnergy, reduced ? 1 : 0.045)
+      listen = damp(listen, activeState === 'listening' ? 1 : 0, ease)
+      think = damp(think, activeState === 'thinking' ? 1 : 0, ease)
+      type = damp(type, activeState === 'typing' ? 1 : 0, ease)
       pointer.x = damp(pointer.x, pointerTarget.x, reduced ? 1 : 0.038)
       pointer.y = damp(pointer.y, pointerTarget.y, reduced ? 1 : 0.038)
 
       material.uniforms.uTime.value = reduced ? 1.4 : now / 1000
       material.uniforms.uEnergy.value = energy
+      material.uniforms.uListen.value = listen
+      material.uniforms.uThink.value = think
+      material.uniforms.uType.value = type
       material.uniforms.uPointer.value.copy(pointer)
       renderer.render(scene, camera)
     }

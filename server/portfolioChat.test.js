@@ -177,3 +177,47 @@ test('the Vercel route answers a deterministic question without secrets', async 
   assert.equal(payload.reason, 'deterministic')
   assert.deepEqual(payload.projectIds, ['mibanco'])
 })
+
+test('the Vercel route answers what Mateo does locally with the full portfolio', async () => {
+  const response = await POST(
+    new Request('https://portfolio.test/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: '¿Qué hace Mateo?', history: [] }),
+    }),
+  )
+  const payload = await response.json()
+
+  assert.equal(payload.source, 'local')
+  assert.equal(payload.kind, 'profile-summary')
+  assert.equal(payload.projectIds.length, 5)
+  assert.match(payload.text, /Product Designer/)
+})
+
+test('gives Gemini the full portfolio for summary questions asked mid-conversation only when needed', () => {
+  const history = [{ role: 'assistant', content: 'Mateo lideró MiBanco.', projectIds: ['mibanco'] }]
+  const summary = preparePortfolioRequest('¿Qué hace Mateo?', history)
+  const openFollowUp = preparePortfolioRequest('¿Y por qué eligieron ese enfoque?', history)
+
+  assert.equal(shouldUseGemini(summary), false)
+  assert.equal(JSON.parse(summary.context).projects.length, 5)
+  assert.equal(shouldUseGemini(openFollowUp), true)
+})
+
+test('defaults the global Gemini daily limit to 15', async () => {
+  let args
+  const redis = {
+    eval: async (_script, _keys, receivedArgs) => {
+      args = receivedArgs
+      return [1, 1, 1, 0]
+    },
+  }
+  const result = await reserveGeminiRequest({
+    request: new Request('https://portfolio.test'),
+    redis,
+    env: { GEMINI_API_KEY: 'test-key' },
+  })
+
+  assert.equal(args[0], 15)
+  assert.equal(result.remaining, 14)
+})

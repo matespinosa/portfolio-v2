@@ -66,8 +66,6 @@ const PROFILE_TERMS = {
   frontend: ['frontend', 'front end', 'react', 'next.js', 'nextjs', 'html', 'css', 'javascript'],
   ai: ['artificial intelligence', 'ai practice', 'cursor', 'codex', 'claude', 'inteligencia artificial', 'ia'],
   experience: [
-    'who is',
-    'quien es',
     'experience',
     'background',
     'career',
@@ -216,6 +214,7 @@ export function classifyPortfolioPresentation({ question, answer }) {
   const normalized = normalize(question)
   const projectIds = Array.isArray(answer?.projectIds) ? answer.projectIds : []
 
+  if (answer?.kind === 'profile-summary') return { kind: 'profile-overview', topic: 'profile' }
   if (answer?.confidence === 'low') return { kind: 'suggestions', topic: 'fallback' }
 
   const profile = profileTopic(normalized)

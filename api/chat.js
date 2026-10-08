@@ -13,6 +13,7 @@ function answerPayload(answer, extras = {}) {
     language: answer.language,
     projectIds: answer.projectIds,
     suggestions: answer.suggestions,
+    kind: answer.kind,
     ...extras,
   }
 }
@@ -88,6 +89,7 @@ export async function POST(request) {
         language: prepared.localAnswer.language,
         projectIds: prepared.projectIds,
         suggestions: [],
+        kind: prepared.localAnswer.kind,
         source: 'gemini',
         remaining: reservation.remaining,
       },

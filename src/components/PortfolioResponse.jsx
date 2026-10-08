@@ -92,6 +92,18 @@ const PRIMARY_METRICS = {
 }
 
 const FOLLOW_UPS = {
+  overview: {
+    es: [
+      { label: 'Rol actual', question: '¿En qué está trabajando Mateo actualmente en Rappi?', icon: Briefcase },
+      { label: 'Resultados', question: '¿Qué impacto tuvo su trabajo?', icon: ChartBar },
+      { label: 'Práctica frontend', question: '¿Cómo influye la experiencia frontend de Mateo en su trabajo de diseño?', icon: Code },
+    ],
+    en: [
+      { label: 'Current role', question: 'What is Mateo currently building at Rappi?', icon: Briefcase },
+      { label: 'Results', question: 'What impact did his work have?', icon: ChartBar },
+      { label: 'Frontend practice', question: 'How does frontend experience shape his design work?', icon: Code },
+    ],
+  },
   carousel: {
     es: [
       { label: 'Resultados', question: 'Compara los resultados de estos proyectos.', icon: ChartBar },
@@ -601,6 +613,54 @@ function ProfileFacts({ topic, language }) {
   )
 }
 
+const OVERVIEW_FACTS = {
+  es: [
+    { label: 'ROL ACTUAL', value: 'Product Designer · Merchants', detail: profile.currentRole.company },
+    { label: 'EXPERIENCIA', value: '6+ años', detail: '5+ en diseño de producto' },
+    { label: 'FOCO', value: 'Productos financieros', detail: 'Plataformas B2B · sistemas de diseño' },
+    { label: 'PRÁCTICA', value: 'Diseño + frontend', detail: 'React · Next.js · IA' },
+  ],
+  en: [
+    { label: 'CURRENT ROLE', value: profile.currentRole.role, detail: profile.currentRole.company },
+    { label: 'EXPERIENCE', value: '6+ years', detail: '5+ in product design' },
+    { label: 'FOCUS', value: 'Financial products', detail: 'B2B platforms · design systems' },
+    { label: 'PRACTICE', value: 'Design + frontend', detail: 'React · Next.js · AI' },
+  ],
+}
+
+function ProfileOverview({ projectList, language, onOpenProject, onAsk, isSending }) {
+  return (
+    <>
+      <dl className="portfolio-response__overview">
+        {OVERVIEW_FACTS[language].map((fact) => (
+          <div key={fact.label}>
+            <dt className="mono">{fact.label}</dt>
+            <dd>
+              <strong>{fact.value}</strong>
+              <small>{fact.detail}</small>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {projectList.length > 0 && (
+        <ProjectEvidenceList
+          projectList={projectList}
+          language={language}
+          onOpenProject={onOpenProject}
+          onAsk={onAsk}
+          isSending={isSending}
+        />
+      )}
+      <FollowUps
+        items={FOLLOW_UPS.overview[language]}
+        onAsk={onAsk}
+        isSending={isSending}
+        label={language === 'es' ? 'Seguir explorando' : 'Keep exploring'}
+      />
+    </>
+  )
+}
+
 function ProjectSpotlight({ project, language, onOpenProject, onAsk, isSending }) {
   if (!project) return null
   const copy = projectCopy(project, language)
@@ -721,6 +781,16 @@ export default function PortfolioResponse({ message, onAsk, onOpenProject, isSen
 
       {kind === 'profile-facts' && (
         <ProfileFacts topic={message.presentation?.topic} language={language} />
+      )}
+
+      {kind === 'profile-overview' && (
+        <ProfileOverview
+          projectList={projectList}
+          language={language}
+          onOpenProject={onOpenProject}
+          onAsk={onAsk}
+          isSending={isSending}
+        />
       )}
 
       {kind === 'suggestions' && message.suggestions?.length > 0 && (

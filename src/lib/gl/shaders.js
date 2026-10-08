@@ -51,66 +51,54 @@ export const QUAD_VERTEX = /* glsl */ `
 `
 
 /**
- * Glass orb for the AI chat. A cluster of flattened ellipsoid "petals" is
- * intersected analytically per pixel; the colour comes from how much light
- * survives the stack (Beer-Lambert), so overlap alone paints the gradient:
- * pale amber at the rim, saturated orange mid-body, deep red inside, near
- * black core. Absorption commutes, so the hits never need sorting.
+ * Warm fluid orb for the AI chat: one soft sphere whose interior is a slowly
+ * domain-warped mix of rose, orange and amber, with a pale halo and a faint
+ * static grain so it sits on the paper like the rest of the page.
  *
- * Output is authored straight in sRGB and already multiplied by the paper
- * colour, which makes src-over compositing equivalent to an exact multiply.
- * Keep tone mapping and the colorspace chunk off or the palette collapses.
+ * State drives the motion: `uEnergy` speeds the flow, `uListen` makes the
+ * sphere breathe, `uType` adds a quick tremor and `uThink` swirls the fluid.
+ * Output is premultiplied sRGB; keep tone mapping and the colorspace chunk
+ * off or the palette washes out.
  */
 export const ORB_FRAGMENT = /* glsl */ `
   precision highp float;
 
   uniform float uTime;
   uniform float uEnergy;
+  uniform float uListen;
+  uniform float uThink;
+  uniform float uType;
   uniform vec2 uRes;
   uniform vec2 uPointer;
   uniform vec3 uPaper;
 
   varying vec2 vUv;
 
-  const int PETALS = 19;
-  const float PETALS_F = 19.0;
+  ${NOISE_GLSL}
 
-  // Per-petal absorption. Blue is spent first (amber), red almost survives
-  // (saturated orange). Each petal mixes between the two tints.
-  const vec3 SIGMA_DEEP = vec3(0.030, 0.260, 0.80);
-  const vec3 SIGMA_PALE = vec3(0.012, 0.130, 0.48);
+  const vec3 ROSE = vec3(0.898, 0.282, 0.310);
+  const vec3 ORANGE = vec3(0.941, 0.478, 0.235);
+  const vec3 AMBER = vec3(0.965, 0.710, 0.271);
+  const vec3 HALO = vec3(0.973, 0.851, 0.800);
 
-  // The shadow is built from two halves. First, a neutral absorbing ball at the
-  // heart of the cluster: overlap counts are piecewise constant, so a shadow
-  // derived from them alone facets, while a real inner volume falls off smoothly.
-  const vec3 CORE_TINT = vec3(1.0, 0.92, 0.86);
-  const float CORE_RADIUS = 0.45;
-  const float CORE_DENSITY = 1.2;
-  const float CORE_FALLOFF = 3.0;
-
-  // Second half of the shadow, driven by petal overlap so the lens outlines
-  // stay legible inside the dark mass. Quadratic onset, never a hard hinge.
-  const float SHADE_KNEE = 6.0;
-  const float SHADE_GAIN = 0.22;
-  const float SHADE_SOFT = 2.5;
-
-  mat3 rotateY(float a) {
+  mat2 rotate2(float a) {
     float s = sin(a);
     float c = cos(a);
-    return mat3(c, 0.0, -s, 0.0, 1.0, 0.0, s, 0.0, c);
+    return mat2(c, -s, s, c);
   }
 
-  mat3 rotateX(float a) {
-    float s = sin(a);
-    float c = cos(a);
-    return mat3(1.0, 0.0, 0.0, 0.0, c, s, 0.0, -s, c);
-  }
-
-  float hash11(float p) {
-    p = fract(p * 0.1031);
-    p *= p + 33.33;
-    p *= p + p;
-    return fract(p);
+  vec3 fluid(vec2 q, float t) {
+    q = rotate2(t * 0.16 + uThink * t * 0.45) * q;
+    vec2 w = vec2(
+      snoise(q * 0.45 + vec2(t, 0.0)),
+      snoise(q * 0.45 + vec2(-t * 0.8, t * 0.3) + 3.1)
+    );
+    float n = snoise(q * 0.5 + 0.9 * w + vec2(0.0, t * 0.4)) * 0.3;
+    // Large soft zones: rose low-left, orange through the middle, amber high-right.
+    float field = clamp(0.36 + n + q.x * 0.26 + q.y * 0.36, 0.0, 1.0);
+    vec3 c = mix(ROSE, ORANGE, smoothstep(0.0, 0.55, field));
+    c = mix(c, AMBER, smoothstep(0.45, 1.0, field));
+    return c;
   }
 
   void main() {
@@ -119,115 +107,33 @@ export const ORB_FRAGMENT = /* glsl */ `
     if (aspect > 1.0) p.x *= aspect;
     else p.y /= aspect;
 
-    float t = uTime * (0.78 + uEnergy * 0.26);
-    float spread = 0.38 + uEnergy * 0.03;
+    float t = uTime * (0.30 + uEnergy * 0.8);
+    float radius = 0.64 * (
+      1.0
+      + (0.012 + uListen * 0.05) * sin(uTime * (1.6 + uListen * 6.0))
+      + uType * 0.016 * sin(uTime * 11.0)
+    );
+    float r = length(p);
 
-    vec3 ro = vec3(0.0, 0.0, 3.2);
-    vec3 rd = normalize(vec3(p * 0.34, -1.0));
+    vec2 q = p / radius - uPointer * 0.16;
+    vec3 col = fluid(q, t);
 
-    // Tumbling the ray is one rotation for the whole cluster.
-    mat3 tumble = rotateY(t * 0.22 + uPointer.x * 0.3)
-      * rotateX(0.30 + sin(t * 0.17) * 0.14 - uPointer.y * 0.24);
-    ro = tumble * ro;
-    rd = tumble * rd;
+    // Pale highlight in the upper right, like light caught in the fluid.
+    float light = 1.0 - smoothstep(0.0, 0.8, length(q - vec2(0.3, 0.4)));
+    col = mix(col, vec3(1.0, 0.95, 0.83), light * 0.36);
 
-    vec3 absorb = vec3(0.0);
-    float cover = 0.0;
-    float nearHit = 1e9;
-    vec3 nearNormal = vec3(0.0);
+    float core = 1.0 - smoothstep(radius * 0.62, radius * 1.04, r);
+    float halo = 1.0 - smoothstep(radius * 0.9, radius * 1.45, r);
+    vec3 haloColor = mix(uPaper, HALO, 0.75);
 
-    for (int i = 0; i < PETALS; i++) {
-      float fi = float(i);
+    col = mix(haloColor, col, core);
 
-      // Fibonacci spiral: petal normals spread evenly over the sphere.
-      float z = 1.0 - 2.0 * (fi + 0.5) / PETALS_F;
-      float ring = sqrt(max(1.0 - z * z, 0.0));
-      float phi = fi * 2.39996323;
-      vec3 axis = vec3(ring * cos(phi), ring * sin(phi), z);
+    // Static grain: part of the sphere, not an animated overlay.
+    float grain = hash(floor(gl_FragCoord.xy * 0.7)) - 0.5;
+    col += grain * 0.04 * core;
 
-      vec3 guide = abs(axis.z) < 0.9 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-      vec3 tangent = normalize(cross(guide, axis));
-      vec3 bitangent = cross(axis, tangent);
-
-      float h1 = hash11(fi + 1.37);
-      float h2 = hash11(fi + 7.71);
-      float ra = 0.66 * (0.86 + h1 * 0.42);
-      float rb = ra * (0.80 + h2 * 0.34);
-      float rc = 0.075 + h1 * 0.055;
-
-      // Pushing each petal out along its own normal is what lobes the silhouette.
-      vec3 origin = ro - axis * (spread * (0.7 + h2 * 0.7));
-      vec3 lo = vec3(
-        dot(origin, tangent) / ra,
-        dot(origin, bitangent) / rb,
-        dot(origin, axis) / rc
-      );
-      vec3 ld = vec3(
-        dot(rd, tangent) / ra,
-        dot(rd, bitangent) / rb,
-        dot(rd, axis) / rc
-      );
-
-      float a = dot(ld, ld);
-      float b = dot(lo, ld);
-      float c = dot(lo, lo) - 1.0;
-      float disc = b * b - a * c;
-      if (disc <= 0.0) continue;
-
-      float root = sqrt(disc);
-      float near = max((-b - root) / a, 0.0);
-      float far = (-b + root) / a;
-      if (far <= 0.0) continue;
-
-      // Local chord runs 0..2. The smoothstep keeps a crisp elliptical rim;
-      // the mix keeps a gentle thickness falloff inside it, without which each
-      // petal lays down a flat slab and the overlaps read as hard facets.
-      float chord = (far - near) * sqrt(a);
-      float weight = smoothstep(0.0, 0.30, chord) * mix(1.0, chord * 0.5, 0.35);
-      absorb += mix(SIGMA_DEEP, SIGMA_PALE, h1) * weight;
-      cover += weight;
-
-      if (near < nearHit && weight > 0.25) {
-        nearHit = near;
-        vec3 hit = lo + ld * near;
-        nearNormal = normalize(
-          hit.x / ra * tangent + hit.y / rb * bitangent + hit.z / rc * axis
-        );
-      }
-    }
-
-    vec3 core = ro - vec3(0.06, -0.05, 0.0);
-    float cb = dot(core, rd);
-    float cc = dot(core, core) - CORE_RADIUS * CORE_RADIUS;
-    float cd = cb * cb - cc;
-    if (cd > 0.0) {
-      absorb += CORE_TINT * pow(sqrt(cd) / CORE_RADIUS, CORE_FALLOFF) * CORE_DENSITY;
-    }
-
-    float over = max(cover - SHADE_KNEE, 0.0);
-    absorb += CORE_TINT * (over * over / (over + SHADE_SOFT)) * SHADE_GAIN;
-
-    vec3 transmitted = exp(-absorb);
-    float alpha = 1.0 - exp(-cover * 5.0);
-
-    vec3 col = uPaper * transmitted;
-    col += vec3(1.0, 0.5, 0.14) * (1.0 - transmitted.g) * (0.09 + uEnergy * 0.03) * alpha;
-
-    // One smooth view-space gradient across the whole cluster. The petals only
-    // describe density; this is what makes the ball read as a lit volume.
-    vec3 shell = normalize(vec3(p * 0.62, 0.9));
-    float lambert = clamp(0.5 + 0.5 * dot(shell, normalize(vec3(-0.5, 0.6, 0.62))), 0.0, 1.0);
-    col *= mix(0.74, 1.14, lambert);
-
-    if (nearHit < 1e8) {
-      vec3 light = normalize(vec3(-0.42, 0.72, 0.66));
-      float spec = pow(max(dot(reflect(rd, nearNormal), light), 0.0), 58.0);
-      float fresnel = pow(1.0 - max(dot(-rd, nearNormal), 0.0), 4.0);
-      // Scaled by alpha, otherwise the silhouette picks up a grey halo.
-      col += (spec * 0.5 + fresnel * 0.07) * alpha;
-    }
-
-    gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+    float alpha = clamp(max(core, halo * 0.78), 0.0, 1.0);
+    gl_FragColor = vec4(col * alpha, alpha);
   }
 `
 

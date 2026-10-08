@@ -1,6 +1,6 @@
 import { experience, projects, selectedClients } from '../src/data/projects.js'
 import { profile } from '../src/data/profile.js'
-import { answerPortfolioQuestion, mentionedProjectIds } from '../src/lib/portfolioAssistant.js'
+import { answerPortfolioQuestion, canAnswerLocally, mentionedProjectIds } from '../src/lib/portfolioAssistant.js'
 import { isPortfolioFollowUp } from '../src/lib/portfolioPresentation.js'
 
 const MAX_HISTORY_MESSAGES = 6
@@ -85,6 +85,8 @@ export function preparePortfolioRequest(question, rawHistory) {
   }
 }
 
+// Gemini handles open questions and follow-ups that depend on the conversation; clear,
+// self-contained questions stay local so the small daily quota lasts for more visitors.
 export function shouldUseGemini({ history, localAnswer }) {
-  return history.length > 0 || localAnswer.confidence !== 'high'
+  return !canAnswerLocally({ history, localAnswer })
 }

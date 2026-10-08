@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { answerPortfolioQuestion } from './portfolioAssistant.js'
+import { answerPortfolioQuestion, canAnswerLocally } from './portfolioAssistant.js'
 
 test('answers broad financial-product questions in Spanish', () => {
   const answer = answerPortfolioQuestion('¿Qué productos financieros ha diseñado Mateo?')
@@ -114,7 +114,8 @@ test('redirects unrelated questions to supported portfolio topics', () => {
 
   assert.equal(answer.confidence, 'low')
   assert.deepEqual(answer.projectIds, [])
-  assert.match(answer.text, /does not contain a verifiable answer/)
+  assert.match(answer.text, /couldn't find that in the portfolio/)
+  assert.ok(answer.suggestions.includes('What does Mateo do?'))
 })
 
 test('routes design-system questions ahead of the generic "worked with" clients answer', () => {
@@ -190,4 +191,50 @@ test('writes English project answers in the third person', () => {
   assert.doesNotMatch(fx, /\bI\b/)
   assert.match(frontend, /^Mateo has experience with React/)
   assert.doesNotMatch(answerPortfolioQuestion('What did he do at MiBanco?').text, /\bI led\b/)
+})
+
+test('summarizes the whole portfolio for open questions about what Mateo does', () => {
+  const spanish = ['¿Qué hace Mateo?', 'Qué hace Mateo', '¿A qué se dedica Mateo?', 'Cuéntame sobre Mateo', '¿Quién es Mateo?', 'Resúmeme el perfil de Mateo', '¿Por qué debería contratar a Mateo?', '¿En qué es bueno?']
+  const english = ['What does Mateo do?', 'Who is Mateo?', 'Tell me about Mateo', 'Give me a summary of his work', 'Why should I hire him?']
+
+  for (const [questions, language] of [[spanish, 'es'], [english, 'en']]) {
+    for (const question of questions) {
+      const answer = answerPortfolioQuestion(question)
+
+      assert.equal(answer.kind, 'profile-summary', question)
+      assert.equal(answer.language, language, question)
+      assert.equal(answer.confidence, 'high', question)
+      assert.equal(answer.standalone, true, question)
+      assert.deepEqual(answer.projectIds, ['modyo', 'mibanco', 'credicorp', 'dando', 'kapital'], question)
+      assert.match(answer.text, /Rappi/, question)
+    }
+  }
+
+  assert.match(answerPortfolioQuestion('¿Qué hace Mateo?').text, /factoring para pymes/)
+  assert.equal(answerPortfolioQuestion('Mateo').kind, 'profile-summary')
+  assert.match(answerPortfolioQuestion('What does Mateo do?').text, /US\$1\.2B/)
+})
+
+test('keeps specific questions ahead of the profile summary', () => {
+  assert.deepEqual(answerPortfolioQuestion('¿Qué hace Mateo en Kapital?').projectIds, ['kapital'])
+  assert.deepEqual(answerPortfolioQuestion('¿Qué hace Mateo actualmente?').projectIds, ['rappi'])
+  assert.equal(answerPortfolioQuestion('Resumen de sus resultados').kind, undefined)
+})
+
+test('answers domain experience questions with the matching cases', () => {
+  const answer = answerPortfolioQuestion('¿Tiene experiencia en B2B?')
+
+  assert.match(answer.text, /^Sí\. /)
+  assert.deepEqual(answer.projectIds, ['credicorp', 'kapital', 'modyo'])
+  assert.deepEqual(answerPortfolioQuestion('Has he designed onboarding flows?').projectIds, ['mibanco', 'dando'])
+})
+
+test('keeps self-contained answers local mid-conversation and sends context-dependent ones to Gemini', () => {
+  const history = [{ role: 'user', content: '¿Qué hizo en MiBanco?' }]
+
+  assert.equal(canAnswerLocally({ history: [], localAnswer: answerPortfolioQuestion('¿Qué hace Mateo?') }), true)
+  assert.equal(canAnswerLocally({ history, localAnswer: answerPortfolioQuestion('¿Qué hace Mateo?') }), true)
+  assert.equal(canAnswerLocally({ history, localAnswer: answerPortfolioQuestion('¿Qué hizo en Credicorp?') }), true)
+  assert.equal(canAnswerLocally({ history, localAnswer: answerPortfolioQuestion('¿Cuánto tiempo tomó?') }), false)
+  assert.equal(canAnswerLocally({ history: [], localAnswer: answerPortfolioQuestion('¿Qué opina del diseño brutalista?') }), false)
 })
