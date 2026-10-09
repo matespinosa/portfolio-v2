@@ -2,6 +2,21 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { answerPortfolioQuestion, canAnswerLocally } from './portfolioAssistant.js'
 
+test('can keep answers and suggestions in the portfolio language for Spanish questions', () => {
+  const options = { language: 'en' }
+  const summary = answerPortfolioQuestion('¿Qué hace Mateo?', options)
+  const followUp = answerPortfolioQuestion('¿Y qué resultados tuvo?', { ...options, projectIds: ['mibanco'] })
+  const unknown = answerPortfolioQuestion('¿Cuál es el salario de Mateo?', options)
+
+  assert.equal(summary.language, 'en')
+  assert.match(summary.text, /Mateo is/)
+  assert.equal(followUp.language, 'en')
+  assert.deepEqual(followUp.projectIds, ['mibanco'])
+  assert.match(followUp.text, /documented outcomes/)
+  assert.equal(unknown.language, 'en')
+  assert.ok(unknown.suggestions.includes('What does Mateo do?'))
+})
+
 test('answers broad financial-product questions in Spanish', () => {
   const answer = answerPortfolioQuestion('¿Qué productos financieros ha diseñado Mateo?')
 

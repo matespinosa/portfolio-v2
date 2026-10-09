@@ -15,6 +15,7 @@ import {
 } from '@phosphor-icons/react'
 import { experience, projects } from '../data/projects'
 import { profile } from '../data/profile'
+import { PORTFOLIO_LANGUAGE } from '../data/language'
 import { cleanAssistantText, responseLead } from '../lib/portfolioPresentation'
 import {
   CURRENT_ROLE_ES,
@@ -700,13 +701,13 @@ function ProjectSpotlight({ project, language, onOpenProject, onAsk, isSending }
 }
 
 export default function PortfolioResponse({ message, onAsk, onOpenProject, isSending }) {
-  const language = message.language === 'es' ? 'es' : 'en'
+  const language = PORTFOLIO_LANGUAGE
   const projectList = useMemo(() => selectedProjects(message.projectIds), [message.projectIds])
   const kind = message.presentation?.kind || 'narrative'
   const rich = !['narrative', 'suggestions'].includes(kind)
   const lead = responseLead(message.content, { rich, maxLength: rich ? 600 : 900 })
   const headline = kind === 'project-carousel' ? responseLead(message.content, { rich: true, maxLength: 140 }) : ''
-  const mobileLead = headline?.endsWith(':') ? `${headline.slice(0, -1)} clave.` : headline
+  const mobileLead = headline?.endsWith(':') ? `${headline.slice(0, -1)}.` : headline
 
   return (
     <div className="portfolio-response" data-kind={kind}>

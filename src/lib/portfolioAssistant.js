@@ -685,8 +685,8 @@ function answerUnsupported(context, language) {
   })
 }
 
-export function answerPortfolioQuestion(question, { projectIds: contextualProjectIds = [] } = {}) {
-  const language = detectLanguage(question)
+export function answerPortfolioQuestion(question, { projectIds: contextualProjectIds = [], language: responseLanguage } = {}) {
+  const language = ['en', 'es'].includes(responseLanguage) ? responseLanguage : detectLanguage(question)
   const context = questionContext(question)
 
   if (!context.normalized) {

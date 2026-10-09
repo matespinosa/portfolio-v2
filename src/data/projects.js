@@ -271,7 +271,7 @@ export const projects = [
         title: 'The goal',
         body: 'The challenge boiled down to three objectives: attract new customers, capture and verify their information online, and accompany them with tailored financial offers.',
         bullets: [
-          'Make a libranza loan easier to understand before applying.',
+          'Make loans repaid through payroll deductions easier to understand before applying.',
           'Remove office visits and repeated document handoffs.',
           'Give sales teams traceable, coordinated work instead of Excel and email.',
         ],

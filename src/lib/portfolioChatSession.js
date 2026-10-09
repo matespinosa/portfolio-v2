@@ -1,17 +1,19 @@
 import { SHORT_TITLES } from '../data/copyEs.js'
+import { PORTFOLIO_LANGUAGE } from '../data/language.js'
 import { cleanAssistantText } from './portfolioPresentation.js'
 
-const STORAGE_KEY = 'portfolio-chat-session-v1'
+// Keep older conversations in their original language instead of restoring mixed copy.
+const STORAGE_KEY = `portfolio-chat-session-v1-${PORTFOLIO_LANGUAGE}`
 const MAX_MESSAGES = 40
 const MAX_CONTENT_LENGTH = 6000
 
 const PROFILE_TOPIC_LABELS = {
-  current: 'Rol actual',
+  current: 'Current role',
   frontend: 'Frontend',
-  ai: 'Práctica con IA',
-  experience: 'Trayectoria',
-  location: 'Ubicación',
-  practice: 'Práctica',
+  ai: 'AI practice',
+  experience: 'Experience',
+  location: 'Location',
+  practice: 'Practice',
 }
 
 function defaultStorage() {
@@ -38,7 +40,7 @@ function cleanMessage(raw) {
   return {
     ...message,
     confidence: typeof raw.confidence === 'string' ? raw.confidence : 'high',
-    language: raw.language === 'en' ? 'en' : 'es',
+    language: raw.language === 'es' ? 'es' : PORTFOLIO_LANGUAGE,
     projectIds: Array.isArray(raw.projectIds) ? raw.projectIds.filter((id) => typeof id === 'string') : [],
     suggestions: Array.isArray(raw.suggestions) ? raw.suggestions.filter((item) => typeof item === 'string') : [],
     presentation: raw.presentation && typeof raw.presentation.kind === 'string'
@@ -80,7 +82,7 @@ export function clearChatSession(storage = defaultStorage()) {
 }
 
 function topicsOf(answer) {
-  if (answer.presentation?.kind === 'profile-overview') return ['Perfil']
+  if (answer.presentation?.kind === 'profile-overview') return ['Profile']
   const labels = (answer.projectIds || []).map((id) => (id === 'rappi' ? 'Rappi' : SHORT_TITLES[id])).filter(Boolean)
   if (answer.presentation?.kind === 'profile-facts') {
     const label = PROFILE_TOPIC_LABELS[answer.presentation.topic]

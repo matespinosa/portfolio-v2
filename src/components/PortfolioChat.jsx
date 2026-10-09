@@ -16,6 +16,7 @@ import { useMediaQuery } from '../lib/useMediaQuery'
 import { observeChatViewport } from '../lib/chatViewport'
 import { createPortfolioDictation } from '../lib/portfolioDictation'
 import { lockScroll } from '../lib/scroll'
+import { PORTFOLIO_LANGUAGE, PORTFOLIO_LOCALE } from '../data/language'
 import PortfolioAiOrb from './PortfolioAiOrb'
 import PortfolioResponse from './PortfolioResponse'
 import PortfolioChatSummary from './PortfolioChatSummary'
@@ -25,30 +26,30 @@ const MOBILE_CHAT_QUERY = '(max-width: 560px)'
 
 const STARTER_SUGGESTIONS = [
   {
-    label: '¿Qué hace Mateo?',
-    question: '¿Qué hace Mateo?',
+    label: 'What does Mateo do?',
+    question: 'What does Mateo do?',
   },
   {
-    label: 'Productos financieros',
-    question: '¿Qué productos financieros ha diseñado Mateo?',
+    label: 'Financial products',
+    question: 'What financial products has Mateo designed?',
   },
   {
-    label: 'Práctica frontend',
-    question: '¿Cómo influye la experiencia frontend de Mateo en su trabajo de diseño?',
+    label: 'Frontend practice',
+    question: 'How does frontend experience shape Mateo’s design work?',
   },
   {
-    label: 'Rol actual en Rappi',
-    question: '¿En qué está trabajando Mateo actualmente en Rappi?',
+    label: 'Current role at Rappi',
+    question: 'What is Mateo currently building at Rappi?',
   },
 ]
 
 const STARTER_COPY = {
-  kicker: 'MUEVE · ESCRIBE · PREGUNTA',
-  title: 'Conoce el trabajo de Mateo conversando.',
-  body: 'Pregunta por proyectos, decisiones de producto, frontend o su rol actual.',
-  placeholder: '¿Qué te gustaría saber?',
-  railNote: 'Pregunta sobre proyectos, decisiones de producto, práctica frontend o el rol actual de Mateo en Rappi.',
-  meta: 'Respuestas construidas únicamente con el contenido de este portafolio',
+  kicker: 'MOVE · TYPE · ASK',
+  title: 'Get to know Mateo’s work through conversation.',
+  body: 'Ask about projects, product decisions, frontend or his current role.',
+  placeholder: 'What would you like to know?',
+  railNote: 'Ask about projects, product decisions, frontend practice or Mateo’s current role at Rappi.',
+  meta: 'Answers based only on this portfolio',
 }
 
 // While the chat is open on desktop, the section behind the drawer keeps the chat box in its
@@ -60,16 +61,16 @@ function ChatDefaultBackdrop() {
         <aside className="portfolio-chat__rail">
           <div>
             <p className="mono">Portfolio intelligence</p>
-            <h2>Mesa editorial</h2>
-            <span className="portfolio-chat__rail-state"><i /> Local · Listo</span>
+            <h2>Editorial desk</h2>
+            <span className="portfolio-chat__rail-state"><i /> Local · Ready</span>
           </div>
           <div className="portfolio-chat__rail-conversation">
-            <p className="mono">Conversación</p>
-            <strong>0 preguntas · 0 respuestas</strong>
-            <span>Empieza una conversación sobre el trabajo de Mateo.</span>
+            <p className="mono">Conversation</p>
+            <strong>0 questions · 0 answers</strong>
+            <span>Start a conversation about Mateo’s work.</span>
           </div>
           <nav className="portfolio-chat__rail-topics">
-            <p className="mono">Explorando</p>
+            <p className="mono">Exploring</p>
             {STARTER_SUGGESTIONS.map((suggestion, index) => (
               <button type="button" key={suggestion.label} tabIndex={-1}>
                 <span>{String(index + 1).padStart(2, '0')}</span>
@@ -79,7 +80,7 @@ function ChatDefaultBackdrop() {
           </nav>
           <div className="portfolio-chat__rail-note">
             <p>{STARTER_COPY.railNote}</p>
-            <span className="mono">Pregunta lo que quieras.</span>
+            <span className="mono">Ask anything.</span>
           </div>
         </aside>
         <div className="portfolio-chat__workspace">
@@ -97,8 +98,8 @@ function ChatDefaultBackdrop() {
             <div className="portfolio-chat__header-actions">
               <span className="portfolio-chat__state" data-state="ready">
                 <i />
-                <span className="portfolio-chat__state-label--desktop">Local · Listo</span>
-                <span className="portfolio-chat__state-label--mobile">Local · Activo</span>
+                <span className="portfolio-chat__state-label--desktop">Local · Ready</span>
+                <span className="portfolio-chat__state-label--mobile">Local · Ready</span>
               </span>
               <button type="button" className="portfolio-chat__expand" tabIndex={-1}>
                 <ArrowsOutSimple size={18} />
@@ -149,7 +150,7 @@ export default function PortfolioChat({ onOpenProject }) {
   const [isSending, setIsSending] = useState(false)
   const [voiceState, setVoiceState] = useState('idle')
   const [voiceFeedback, setVoiceFeedback] = useState('')
-  const [assistantStatus, setAssistantStatus] = useState({ label: 'Local · Listo', state: 'ready' })
+  const [assistantStatus, setAssistantStatus] = useState({ label: 'Local · Ready', state: 'ready' })
   const [remainingRequests, setRemainingRequests] = useState(null)
   const stageRef = useRef(null)
   const inputRef = useRef(null)
@@ -189,9 +190,9 @@ export default function PortfolioChat({ onOpenProject }) {
 
   const mobileStatusLabel = useMemo(() => {
     const source = assistantStatus.label.startsWith('Gemini') ? 'Gemini' : 'Local'
-    if (assistantStatus.state === 'thinking') return `${source} · Pensando`
-    if (assistantStatus.state === 'limited') return 'Local · Respaldo'
-    return `${source} · Activo`
+    if (assistantStatus.state === 'thinking') return `${source} · Thinking`
+    if (assistantStatus.state === 'limited') return 'Local · Fallback'
+    return `${source} · Ready`
   }, [assistantStatus])
 
   const openPanel = useCallback(() => {
@@ -220,7 +221,7 @@ export default function PortfolioChat({ onOpenProject }) {
     setMessages([])
     setDraft('')
     setVoiceFeedback('')
-    setAssistantStatus({ label: 'Local · Listo', state: 'ready' })
+    setAssistantStatus({ label: 'Local · Ready', state: 'ready' })
   }, [])
 
   // Closing the window hands focus to the summary, unless something else (a case) already took it.
@@ -238,7 +239,7 @@ export default function PortfolioChat({ onOpenProject }) {
   useEffect(() => {
     const dictation = createPortfolioDictation({
       SpeechRecognition: window.SpeechRecognition || window.webkitSpeechRecognition,
-      lang: navigator.language?.startsWith('es') ? navigator.language : 'es-CO',
+      lang: navigator.language?.startsWith(PORTFOLIO_LANGUAGE) ? navigator.language : PORTFOLIO_LOCALE,
       onDraft: setDraft,
       onState: setVoiceState,
       onFeedback: setVoiceFeedback,
@@ -258,7 +259,7 @@ export default function PortfolioChat({ onOpenProject }) {
     }
     inputRef.current?.blur()
     if (!window.isSecureContext) {
-      setVoiceFeedback('Abre el portafolio con HTTPS para usar el micrófono, o usa el dictado de tu teclado.')
+      setVoiceFeedback('Open the portfolio over HTTPS to use the microphone, or use your keyboard’s dictation.')
       return
     }
     dictationRef.current?.start(draft)
@@ -394,7 +395,7 @@ export default function PortfolioChat({ onOpenProject }) {
 
     dictationRef.current?.cancel()
     const history = serializeChatHistory(messages)
-    const initialFallback = answerPortfolioQuestion(content)
+    const initialFallback = answerPortfolioQuestion(content, { language: PORTFOLIO_LANGUAGE })
     const latestContextIds = [...history]
       .reverse()
       .find((message) => message.projectIds?.some((projectId) => projectId !== 'rappi'))
@@ -405,7 +406,7 @@ export default function PortfolioChat({ onOpenProject }) {
       !initialFallback.projectIds.includes('rappi') &&
       latestContextIds.length > 0
     const fallback = shouldInheritContext
-      ? answerPortfolioQuestion(content, { projectIds: latestContextIds })
+      ? answerPortfolioQuestion(content, { projectIds: latestContextIds, language: PORTFOLIO_LANGUAGE })
       : initialFallback
     const answerLocally = canAnswerLocally({ history, localAnswer: fallback })
     const userMessage = { id: makeId(), role: 'user', content, createdAt: Date.now() }
@@ -418,7 +419,7 @@ export default function PortfolioChat({ onOpenProject }) {
     setVoiceFeedback('')
     setIsSending(true)
     setAssistantStatus({
-      label: answerLocally ? 'Local · Pensando' : 'Gemini · Pensando',
+      label: answerLocally ? 'Local · Thinking' : 'Gemini · Thinking',
       state: 'thinking',
     })
 
@@ -450,17 +451,17 @@ export default function PortfolioChat({ onOpenProject }) {
 
     if (answer.source === 'gemini') {
       setAssistantStatus({
-        label: `Gemini · ${answer.remaining} restantes hoy`,
+        label: `Gemini · ${answer.remaining} left today`,
         state: 'ready',
       })
     } else if (answer.reason?.includes('daily-limit')) {
-      setAssistantStatus({ label: 'Local · Límite diario', state: 'limited' })
+      setAssistantStatus({ label: 'Local · Daily limit', state: 'limited' })
     } else if (['configuration', 'rate-limit-unavailable'].includes(answer.reason)) {
-      setAssistantStatus({ label: 'Local · Configuración pendiente', state: 'limited' })
+      setAssistantStatus({ label: 'Local · Setup needed', state: 'limited' })
     } else if (['offline', 'gemini-unavailable'].includes(answer.reason)) {
-      setAssistantStatus({ label: 'Local · Sin conexión', state: 'limited' })
+      setAssistantStatus({ label: 'Local · Offline', state: 'limited' })
     } else {
-      setAssistantStatus({ label: 'Local · Listo', state: 'ready' })
+      setAssistantStatus({ label: 'Local · Ready', state: 'ready' })
     }
 
     setIsSending(false)
@@ -479,7 +480,7 @@ export default function PortfolioChat({ onOpenProject }) {
           }}
         >
           <label className="visually-hidden" htmlFor="portfolio-question">
-            Pregunta sobre el trabajo de Mateo
+            Ask about Mateo’s work
           </label>
           <textarea
             id="portfolio-question"
@@ -511,12 +512,12 @@ export default function PortfolioChat({ onOpenProject }) {
             }}
             placeholder={
               starter && showSummary
-                ? 'Sigue preguntando…'
+                ? 'Keep asking…'
                 : starter
                 ? STARTER_COPY.placeholder
                 : mobileChat
-                  ? 'Pregúntame sobre un caso…'
-                  : 'Continúa la conversación…'
+                  ? 'Ask about a case…'
+                  : 'Continue the conversation…'
             }
           />
           <div className="portfolio-chat__controls">
@@ -524,7 +525,7 @@ export default function PortfolioChat({ onOpenProject }) {
               className="portfolio-chat__voice"
               type="button"
               onClick={toggleVoice}
-              aria-label={voiceState === 'starting' ? 'Cancelar activación del micrófono' : isListening ? 'Detener dictado por voz' : 'Iniciar dictado por voz'}
+              aria-label={voiceState === 'starting' ? 'Cancel microphone activation' : isListening ? 'Stop voice dictation' : 'Start voice dictation'}
               aria-pressed={isListening}
               disabled={isSending || voiceState === 'stopping'}
               data-listening={isListening ? 'true' : 'false'}
@@ -536,7 +537,7 @@ export default function PortfolioChat({ onOpenProject }) {
             <button
               className="portfolio-chat__send"
               type="submit"
-              aria-label={isSending ? 'Generando respuesta' : 'Enviar mensaje'}
+              aria-label={isSending ? 'Preparing answer' : 'Send message'}
               disabled={isSending || !draft.trim()}
             >
               <ArrowUp size={19} weight="bold" aria-hidden="true" />
@@ -559,7 +560,7 @@ export default function PortfolioChat({ onOpenProject }) {
         )}
 
         {starter && !showSummary && (
-          <div className="portfolio-chat__suggestions" role="group" aria-label="Preguntas sugeridas">
+          <div className="portfolio-chat__suggestions" role="group" aria-label="Suggested questions">
             {STARTER_SUGGESTIONS.map((suggestion) => (
               <button
                 type="button"
@@ -579,7 +580,7 @@ export default function PortfolioChat({ onOpenProject }) {
         <footer className="portfolio-chat__meta">
           {remainingRequests === null
             ? STARTER_COPY.meta
-            : `${remainingRequests} consultas de Gemini disponibles hoy · respaldo local siempre activo`}
+            : `${remainingRequests} Gemini requests left today · local answers always available`}
         </footer>
       </div>
     )
@@ -607,7 +608,7 @@ export default function PortfolioChat({ onOpenProject }) {
             tabIndex={!panelOpen && !sectionInView ? 0 : -1}
           >
             <Sparkle size={16} weight="fill" aria-hidden="true" />
-            <span>{responseCount > 0 ? 'Seguir conversación' : 'Pregúntale al portafolio'}</span>
+            <span>{responseCount > 0 ? 'Continue conversation' : 'Ask the portfolio'}</span>
             {responseCount > 0 && <span className="portfolio-chat__launcher-count">{responseCount}</span>}
           </button>
         </>,
@@ -622,28 +623,28 @@ export default function PortfolioChat({ onOpenProject }) {
         data-inspect="Local portfolio guide"
         role={panelOpen ? 'dialog' : undefined}
         aria-modal={panelOpen ? true : undefined}
-        aria-label={panelOpen ? 'Guía del portafolio' : undefined}
+        aria-label={panelOpen ? 'Portfolio guide' : undefined}
       >
-        <aside className="portfolio-chat__rail" aria-label="Contexto del asistente">
+        <aside className="portfolio-chat__rail" aria-label="Assistant context">
           <div>
             <p className="mono">Portfolio intelligence</p>
-            <h2>{isInitial ? 'Mesa editorial' : 'Mateo portfolio guide'}</h2>
+            <h2>{isInitial ? 'Editorial desk' : 'Mateo portfolio guide'}</h2>
             <span className="portfolio-chat__rail-state">
               <i aria-hidden="true" /> {assistantStatus.label}
             </span>
           </div>
 
           <div className="portfolio-chat__rail-conversation">
-            <p className="mono">Conversación</p>
+            <p className="mono">Conversation</p>
             <strong>
-              {questionCount} {questionCount === 1 ? 'pregunta' : 'preguntas'} · {responseCount}{' '}
-              {responseCount === 1 ? 'respuesta' : 'respuestas'}
+              {questionCount} {questionCount === 1 ? 'question' : 'questions'} · {responseCount}{' '}
+              {responseCount === 1 ? 'answer' : 'answers'}
             </strong>
-            {questionCount === 0 && <span>Empieza una conversación sobre el trabajo de Mateo.</span>}
+            {questionCount === 0 && <span>Start a conversation about Mateo’s work.</span>}
           </div>
 
-          <nav className="portfolio-chat__rail-topics" aria-label="Temas para explorar">
-            <p className="mono">Explorando</p>
+          <nav className="portfolio-chat__rail-topics" aria-label="Topics to explore">
+            <p className="mono">Exploring</p>
             {STARTER_SUGGESTIONS.map((suggestion, index) => (
               <button
                 type="button"
@@ -659,7 +660,7 @@ export default function PortfolioChat({ onOpenProject }) {
 
           <div className="portfolio-chat__rail-note">
             <p>{STARTER_COPY.railNote}</p>
-            <span className="mono">Pregunta lo que quieras.</span>
+            <span className="mono">Ask anything.</span>
           </div>
         </aside>
 
@@ -670,7 +671,7 @@ export default function PortfolioChat({ onOpenProject }) {
                 type="button"
                 className="portfolio-chat__mobile-back"
                 onClick={closePanel}
-                aria-label="Volver al portafolio"
+                aria-label="Back to portfolio"
               >
                 <CaretLeft size={25} weight="regular" aria-hidden="true" />
               </button>
@@ -700,7 +701,7 @@ export default function PortfolioChat({ onOpenProject }) {
                 onClick={() => (panelOpen ? closePanel() : openPanel())}
                 aria-controls="portfolio-chat-surface"
                 aria-expanded={panelOpen}
-                aria-label={panelOpen ? 'Cerrar vista ampliada' : 'Ampliar conversación'}
+                aria-label={panelOpen ? 'Close expanded view' : 'Expand conversation'}
               >
                 {panelOpen ? <X size={18} aria-hidden="true" /> : <ArrowsOutSimple size={18} aria-hidden="true" />}
               </button>
@@ -716,23 +717,23 @@ export default function PortfolioChat({ onOpenProject }) {
                 <PortfolioAiOrb state={orbState} />
                 <p className="portfolio-chat__starter-kicker mono">
                   {awaitingFirstAnswer
-                    ? 'CONECTA · ANALIZA · RESPONDE'
+                    ? 'CONNECT · ANALYZE · ANSWER'
                     : showSummary
-                      ? 'CONVERSACIÓN EN CURSO'
+                      ? 'CONVERSATION IN PROGRESS'
                       : STARTER_COPY.kicker}
                 </p>
                 <h2>
                   {awaitingFirstAnswer
-                    ? 'Estoy conectando tu pregunta con el portafolio.'
+                    ? 'I’m matching your question to the portfolio.'
                     : showSummary
-                      ? 'Retoma la conversación donde la dejaste.'
+                      ? 'Pick up where you left off.'
                       : STARTER_COPY.title}
                 </h2>
                 <p>
                   {awaitingFirstAnswer
-                    ? 'La figura reacciona mientras preparo una respuesta basada en los casos publicados.'
+                    ? 'The orb responds while I prepare an answer based on the published cases.'
                     : showSummary
-                      ? 'Escribe otra pregunta o abre la conversación completa.'
+                      ? 'Ask another question or open the full conversation.'
                       : STARTER_COPY.body}
                 </p>
               </Fragment>
@@ -743,7 +744,7 @@ export default function PortfolioChat({ onOpenProject }) {
                 ref={transcriptRef}
                 data-lenis-prevent
                 role="log"
-                aria-label="Conversación con Mateo portfolio guide"
+                aria-label="Conversation with Mateo portfolio guide"
                 aria-live="polite"
                 onScroll={(event) => {
                   const transcript = event.currentTarget
@@ -773,7 +774,7 @@ export default function PortfolioChat({ onOpenProject }) {
                       {message.role === 'assistant' && (
                         <span className="visually-hidden">Mateo portfolio guide:</span>
                       )}
-                      {message.role === 'user' && <span className="visually-hidden">Tú:</span>}
+                      {message.role === 'user' && <span className="visually-hidden">You:</span>}
                       {message.role === 'assistant' ? (
                         <PortfolioResponse
                           message={message}
@@ -800,7 +801,7 @@ export default function PortfolioChat({ onOpenProject }) {
                     </span>
                     <div className="portfolio-chat__message-content">
                       <span className="portfolio-chat__message-author">Mateo portfolio guide</span>
-                      <p role="status">Conectando la pregunta con el contexto del portafolio…</p>
+                      <p role="status">Matching your question to the portfolio…</p>
                     </div>
                   </article>
                 )}

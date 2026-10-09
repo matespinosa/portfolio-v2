@@ -55,7 +55,8 @@ test('keeps a multi-project comparison scoped to the latest answer', () => {
     context.projects.map((project) => project.id),
     ['mibanco', 'credicorp', 'dando'],
   )
-  assert.match(prepared.localAnswer.text, /resultados documentados/i)
+  assert.equal(prepared.localAnswer.language, 'en')
+  assert.match(prepared.localAnswer.text, /documented outcomes/i)
 })
 
 test('sanitizes history length, content and project ids', () => {
@@ -102,6 +103,7 @@ test('sends the current Gemini 3.5 Flash-Lite configuration', async () => {
   assert.equal(requestBody.generation_config.thinking_level, 'minimal')
   assert.equal(requestBody.generation_config.max_output_tokens, 400)
   assert.equal('temperature' in requestBody.generation_config, false)
+  assert.match(requestBody.system_instruction, /Reply in English.*even when the visitor writes in another language/)
 })
 
 test('builds Bogotá date keys and reads the first forwarded IP', () => {
@@ -175,6 +177,8 @@ test('the Vercel route answers a deterministic question without secrets', async 
   assert.equal(response.status, 200)
   assert.equal(payload.source, 'local')
   assert.equal(payload.reason, 'deterministic')
+  assert.equal(payload.language, 'en')
+  assert.match(payload.text, /Mateo led/)
   assert.deepEqual(payload.projectIds, ['mibanco'])
 })
 
@@ -189,9 +193,10 @@ test('the Vercel route answers what Mateo does locally with the full portfolio',
   const payload = await response.json()
 
   assert.equal(payload.source, 'local')
+  assert.equal(payload.language, 'en')
   assert.equal(payload.kind, 'profile-summary')
   assert.equal(payload.projectIds.length, 5)
-  assert.match(payload.text, /Product Designer/)
+  assert.match(payload.text, /product designer/i)
 })
 
 test('gives Gemini the full portfolio for summary questions asked mid-conversation only when needed', () => {

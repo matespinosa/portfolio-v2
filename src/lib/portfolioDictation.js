@@ -1,16 +1,18 @@
+import { PORTFOLIO_LOCALE } from '../data/language.js'
+
 const ERROR_MESSAGES = {
-  'not-allowed': 'Permite el micrófono en los ajustes de este sitio y vuelve a intentarlo.',
-  'service-not-allowed': 'El navegador no permite el dictado. Prueba el micrófono de tu teclado.',
-  'audio-capture': 'No pude acceder al micrófono. Comprueba que esté disponible e inténtalo de nuevo.',
-  'no-speech': 'No detecté voz. Toca el micrófono para intentarlo de nuevo.',
-  network: 'El dictado necesita conexión. Comprueba tu conexión e inténtalo de nuevo.',
-  'language-not-supported': 'El dictado en español no está disponible. Puedes usar el micrófono de tu teclado.',
-  aborted: 'Dictado detenido.',
+  'not-allowed': 'Allow microphone access in this site’s settings and try again.',
+  'service-not-allowed': 'This browser does not allow dictation. Try your keyboard’s microphone.',
+  'audio-capture': 'I couldn’t access the microphone. Check that it is available and try again.',
+  'no-speech': 'No speech detected. Tap the microphone to try again.',
+  network: 'Dictation needs a connection. Check your connection and try again.',
+  'language-not-supported': 'English dictation is unavailable. You can use your keyboard’s microphone.',
+  aborted: 'Dictation stopped.',
 }
 
-const READY_MESSAGE = 'Dictado listo. Revisa el texto y envía tu pregunta.'
+const READY_MESSAGE = 'Dictation ready. Review the text and send your question.'
 
-export function createPortfolioDictation({ SpeechRecognition, lang = 'es-CO', onDraft, onState, onFeedback }) {
+export function createPortfolioDictation({ SpeechRecognition, lang = PORTFOLIO_LOCALE, onDraft, onState, onFeedback }) {
   let active = null
 
   const release = (session) => {
@@ -43,7 +45,7 @@ export function createPortfolioDictation({ SpeechRecognition, lang = 'es-CO', on
     start(draft = '') {
       if (active) return false
       if (!SpeechRecognition) {
-        onFeedback('Este navegador no ofrece dictado. Puedes usar el micrófono de tu teclado.')
+        onFeedback('This browser does not support dictation. You can use your keyboard’s microphone.')
         return false
       }
 
@@ -60,7 +62,7 @@ export function createPortfolioDictation({ SpeechRecognition, lang = 'es-CO', on
           if (active !== session || session.state === 'stopping') return
           session.state = 'listening'
           onState('listening')
-          onFeedback('Escuchando… Toca detener cuando termines.')
+          onFeedback('Listening… Tap stop when you’re done.')
         }
         recognition.onresult = (event) => {
           if (active !== session) return
@@ -77,7 +79,7 @@ export function createPortfolioDictation({ SpeechRecognition, lang = 'es-CO', on
           if (active !== session) return
           release(session)
           try { recognition.abort() } catch { /* The service may already be closed. */ }
-          onFeedback(ERROR_MESSAGES[event.error] || 'No pude completar el dictado. Inténtalo de nuevo o escribe tu pregunta.')
+          onFeedback(ERROR_MESSAGES[event.error] || 'I couldn’t complete dictation. Try again or type your question.')
         }
         recognition.onend = () => {
           if (active !== session) return
@@ -85,13 +87,13 @@ export function createPortfolioDictation({ SpeechRecognition, lang = 'es-CO', on
           onFeedback(session.hasResult ? READY_MESSAGE : ERROR_MESSAGES['no-speech'])
         }
         onState('starting')
-        onFeedback('Activando micrófono…')
+        onFeedback('Starting microphone…')
         recognition.start()
         return true
       } catch (error) {
         if (session) cancel()
         const code = error.name === 'NotAllowedError' ? 'not-allowed' : error.name
-        onFeedback(ERROR_MESSAGES[code] || 'No pude activar el micrófono. Inténtalo de nuevo o usa el dictado de tu teclado.')
+        onFeedback(ERROR_MESSAGES[code] || 'I couldn’t start the microphone. Try again or use your keyboard’s dictation.')
         return false
       }
     },
@@ -99,16 +101,16 @@ export function createPortfolioDictation({ SpeechRecognition, lang = 'es-CO', on
       if (!active || active.state === 'stopping') return
       if (active.state === 'starting') {
         cancel()
-        onFeedback('Dictado detenido.')
+        onFeedback('Dictation stopped.')
         return
       }
       const session = active
       session.state = 'stopping'
       onState('stopping')
-      onFeedback('Terminando dictado…')
+      onFeedback('Finishing dictation…')
       try { session.recognition.stop() } catch {
         cancel()
-        onFeedback('Dictado detenido.')
+        onFeedback('Dictation stopped.')
       }
     },
     cancel,

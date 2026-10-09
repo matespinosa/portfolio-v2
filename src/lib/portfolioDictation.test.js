@@ -45,8 +45,8 @@ test('replaces interim text instead of duplicating it and preserves the original
   recognition.onresult({ results: [result('los proyectos', true), result('financieros', true)] })
   recognition.onend()
   assert.deepEqual(drafts, ['Quiero conocer los pro', 'Quiero conocer los proyectos financieros'])
-  assert.match(feedback.at(-1), /Revisa el texto/)
-  assert.equal(recognition.lang, 'es-CO')
+  assert.match(feedback.at(-1), /Review the text/)
+  assert.equal(recognition.lang, 'en-US')
 })
 
 test('stopping accepts the last recognition result before releasing the microphone', () => {
@@ -86,7 +86,7 @@ test('permission rejection remains visible after the service ends and allows ret
   const delayedEnd = instances[0].onend
   instances[0].onerror({ error: 'not-allowed' })
   delayedEnd()
-  assert.match(feedback.at(-1), /Permite el micrófono/)
+  assert.match(feedback.at(-1), /Allow microphone access/)
   assert.equal(states.at(-1), 'idle')
   assert.equal(instances[0].aborted, true)
   assert.equal(dictation.start(), true)
@@ -97,24 +97,24 @@ test('handles synchronous startup failures without leaving the button active', (
   assert.equal(dictation.start(), false)
   assert.equal(states.at(-1), 'idle')
   assert.equal(instances[0].aborted, true)
-  assert.match(feedback.at(-1), /Permite el micrófono/)
+  assert.match(feedback.at(-1), /Allow microphone access/)
 })
 
 test('offers keyboard dictation in an unsupported browser', () => {
   const { dictation, states, feedback } = setup({ supported: false })
   assert.equal(dictation.start(), false)
   assert.deepEqual(states, [])
-  assert.match(feedback.at(-1), /micrófono de tu teclado/)
+  assert.match(feedback.at(-1), /your keyboard’s microphone/)
 })
 
 test('distinguishes silence and network errors, and caps dictated input at 1200 characters', () => {
   const { dictation, instances, feedback, drafts } = setup()
   dictation.start()
   instances[0].onend()
-  assert.match(feedback.at(-1), /No detecté voz/)
+  assert.match(feedback.at(-1), /No speech detected/)
   dictation.start()
   instances[1].onerror({ error: 'network' })
-  assert.match(feedback.at(-1), /conexión/)
+  assert.match(feedback.at(-1), /connection/)
   dictation.start('Texto')
   instances[2].onresult({ results: [result('a'.repeat(1300), true)] })
   assert.equal(drafts.at(-1).length, 1200)

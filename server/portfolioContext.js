@@ -1,5 +1,6 @@
 import { experience, projects, selectedClients } from '../src/data/projects.js'
 import { profile } from '../src/data/profile.js'
+import { PORTFOLIO_LANGUAGE } from '../src/data/language.js'
 import { answerPortfolioQuestion, canAnswerLocally, mentionedProjectIds } from '../src/lib/portfolioAssistant.js'
 import { isPortfolioFollowUp } from '../src/lib/portfolioPresentation.js'
 
@@ -48,7 +49,7 @@ export function sanitizeHistory(rawHistory) {
 
 export function preparePortfolioRequest(question, rawHistory) {
   const history = sanitizeHistory(rawHistory)
-  const initialAnswer = answerPortfolioQuestion(question)
+  const initialAnswer = answerPortfolioQuestion(question, { language: PORTFOLIO_LANGUAGE })
   const explicitlyMentionedIds = mentionedProjectIds(question)
   const latestContextIds = [...history]
     .reverse()
@@ -60,7 +61,7 @@ export function preparePortfolioRequest(question, rawHistory) {
     !initialAnswer.projectIds.includes('rappi') &&
     latestContextIds.length > 0
   const localAnswer = shouldInheritContext
-    ? answerPortfolioQuestion(question, { projectIds: latestContextIds })
+    ? answerPortfolioQuestion(question, { projectIds: latestContextIds, language: PORTFOLIO_LANGUAGE })
     : initialAnswer
   const relevantIds = new Set(
     localAnswer.projectIds.filter((projectId) => KNOWN_PROJECT_IDS.has(projectId)),
