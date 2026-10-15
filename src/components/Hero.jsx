@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { SplitText } from 'gsap/SplitText'
@@ -10,6 +11,7 @@ const RADIUS = 190
 const PULL = 22
 
 export default function Hero({ ready }) {
+  const { t } = useLanguage()
   const rootRef = useRef(null)
   const titleRef = useRef(null)
   const splitRef = useRef(null)
@@ -120,31 +122,25 @@ export default function Hero({ ready }) {
   }, [ready])
 
   return (
-    <section className="hero" id="top" ref={rootRef} aria-label="Introduction">
+    <section className="hero" id="top" ref={rootRef} aria-label={t("Introduction")}>
       <div className="hero-signals" aria-hidden="true">
         <i data-signal="one" />
         <i data-signal="two" />
         <i data-signal="three" />
         <i data-signal="four" />
       </div>
-      <div className="hero-content container" data-inspect="Hero / artboard">
+      <div className="hero-content container" data-inspect={t("Hero / artboard")}>
         <div className="hero-copy">
           <div className="hero-frame" aria-hidden="true">
-            <span className="hero-frame-label">hero / overview</span>
+            <span className="hero-frame-label">{t("hero / overview")}</span>
             {['tl', 'tr', 'bl', 'br'].map((corner) => (
               <i className="hero-handle" data-corner={corner} key={corner} />
             ))}
           </div>
 
-          <h1 className="hero-name" ref={titleRef}>
-            Interfaces built like instruments
-          </h1>
+          <h1 className="hero-name" ref={titleRef}> {t("Interfaces built like instruments")} </h1>
 
-          <p className="hero-sub">
-            I’m Mateo Espinosa, a product designer turning complex fintech and B2B flows
-            into clear, measurable experiences. 6+ years across design and frontend.
-            Currently shaping merchant tools at Rappi.
-          </p>
+          <p className="hero-sub"> {t("I’m Mateo Espinosa, a product designer turning complex fintech and B2B flows into clear, measurable experiences. 6+ years across design and frontend. Currently shaping merchant tools at Rappi.")} </p>
 
           <div className="hero-actions">
             <button
@@ -152,9 +148,7 @@ export default function Hero({ ready }) {
               className="btn btn-primary"
               onClick={() => scrollToTarget('#work')}
               data-cursor="link"
-            >
-              Selected work
-              <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            > {t("Selected work")} <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <path d="M3 11 11 3m0 0H5m6 0v6" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             </button>
@@ -163,9 +157,7 @@ export default function Hero({ ready }) {
               className="btn btn-ghost"
               onClick={() => scrollToTarget('#practice')}
               data-cursor="link"
-            >
-              About Mateo
-            </button>
+            > {t("About Mateo")} </button>
           </div>
         </div>
 

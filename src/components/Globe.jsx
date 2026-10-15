@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { createGlobe } from '../lib/gl/globe'
@@ -15,6 +16,7 @@ const PALETTE = {
 const AWAY = COUNTRIES.filter((c) => c.id !== HOME.id)
 
 export default function Globe() {
+  const { t } = useLanguage()
   const canvasRef = useRef(null)
   const globeRef = useRef(null)
   const labelRefs = useRef(new Map())
@@ -100,10 +102,9 @@ export default function Globe() {
   return (
     <section className="world container" id="world" aria-labelledby="world-title">
       <header className="section-head">
-        <h2 className="section-title" id="world-title">
-          Products across <em>Latin America</em>
+        <h2 className="section-title" id="world-title"> {t("Products across")} <em>{t("Latin America")}</em>
         </h2>
-        <p className="section-sub">Four companies with a regional presence</p>
+        <p className="section-sub">{t("Four companies with a regional presence")}</p>
       </header>
 
       <div className="world-stage">
@@ -113,7 +114,7 @@ export default function Globe() {
             ref={canvasRef}
             aria-hidden="true"
             data-cursor="label"
-            data-cursor-label="Drag"
+            data-cursor-label={t("Drag")}
           />
           <div className="world-labels" aria-hidden="true">
             {COUNTRIES.map((c) => (
@@ -124,30 +125,26 @@ export default function Globe() {
                   c.id === HOME.id ? 'is-home' : ''
                 }`}
               >
-                <b>{c.name}</b>
+                <b>{t(c.name)}</b>
                 <em>{c.clients.map((x) => x.name).join(' · ')}</em>
               </span>
             ))}
           </div>
-          <p className="world-hint mono" aria-hidden="true">
-            Drag to rotate
-          </p>
+          <p className="world-hint mono" aria-hidden="true"> {t("Drag to rotate")} </p>
         </div>
 
         <div className="world-side">
           <p className="world-lead">
-            My work connects product teams at {CLIENTS.map((c) => c.name).join(', ')}.
-            The map shows the regional footprint of these companies; each case study
-            describes my own scope. Bogotá is my base.
+            {t('My work connects product teams at {companies}. The map shows the regional footprint of these companies; each case study describes my own scope. Bogotá is my base.', { companies: CLIENTS.map((c) => c.name).join(', ') })}
           </p>
 
           <ul className="world-clients">
             {CLIENTS.map((c) => (
               <li key={c.id}>
-                <span className="client-name">{c.name}</span>
-                <span className="client-kind">{c.kind}</span>
+                <span className="client-name">{t(c.name)}</span>
+                <span className="client-kind">{t(c.kind)}</span>
                 <span className="client-count mono">
-                  {c.countries.length} {c.countries.length === 1 ? 'market' : 'markets'}
+                  {c.countries.length} {t(c.countries.length === 1 ? 'market' : 'markets')}
                 </span>
               </li>
             ))}
@@ -167,8 +164,8 @@ export default function Globe() {
                   data-cursor="link"
                 >
                   <span className="world-city-name">
-                    {c.name}
-                    {c.id === HOME.id && <i className="world-city-tag">base</i>}
+                    {t(c.name)}
+                    {c.id === HOME.id && <i className="world-city-tag">{t("base")}</i>}
                   </span>
                   <span className="world-city-meta">
                     {c.clients.map((x) => x.name).join(' · ')}

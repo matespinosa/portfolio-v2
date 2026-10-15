@@ -13,6 +13,48 @@ test('uses local answers for a clear first question', () => {
   assert.deepEqual(prepared.projectIds, ['mibanco'])
 })
 
+test('the route scopes the dictated Rappi question locally in either selected language', async () => {
+  for (const language of ['es', 'en']) {
+    const response = await POST(new Request('https://portfolio.test/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ question: 'Que Que hace Mateo en rapi', language, history: [] }),
+    }))
+    const payload = await response.json()
+    assert.equal(response.status, 200)
+    assert.equal(payload.source, 'local')
+    assert.equal(payload.reason, 'deterministic')
+    assert.equal(payload.language, language)
+    assert.equal(payload.kind, 'current-role')
+    assert.deepEqual(payload.projectIds, ['rappi'])
+    assert.match(payload.text, language === 'es' ? /^En Rappi/ : /^At Rappi/)
+    assert.doesNotMatch(payload.text, /MiBanco|Modyo|Credicorp/)
+  }
+})
+
+test('Gemini receives Rappi scope without unrelated case metrics for a follow-up', () => {
+  const prepared = preparePortfolioRequest('¿Y qué resultados tuvo?', [
+    { role: 'assistant', content: 'MiBanco', projectIds: ['mibanco'] },
+    { role: 'assistant', content: 'Rappi', projectIds: ['rappi'] },
+  ], 'es')
+  const context = JSON.parse(prepared.context)
+  assert.equal(shouldUseGemini(prepared), true)
+  assert.deepEqual(prepared.projectIds, ['rappi'])
+  assert.deepEqual(context.projects, [])
+  assert.deepEqual(context.questionScope.entityIds, ['rappi'])
+  assert.equal(context.questionScope.portfolioWide, false)
+  assert.equal(context.questionScope.currentRoleHasPublishedMetrics, false)
+  assert.equal(context.questionScope.currentRoleHasPublishedCase, false)
+  assert.match(prepared.localAnswer.text, /aún no publica métricas/)
+})
+
+test('mixed comparisons include only the requested case and the current-role scope', () => {
+  const prepared = preparePortfolioRequest('Compare metrics for rapi and MiBanco', [])
+  const context = JSON.parse(prepared.context)
+  assert.deepEqual(prepared.projectIds, ['mibanco', 'rappi'])
+  assert.deepEqual(context.projects.map(({ id }) => id), ['mibanco'])
+  assert.equal(context.questionScope.portfolioWide, false)
+})
+
 test('provides missing-metric context to the model without fabricated Kapital results', () => {
   const prepared = preparePortfolioRequest('What metrics did Kapital achieve?', [])
   const context = JSON.parse(prepared.context)
@@ -103,7 +145,10 @@ test('sends the current Gemini 3.5 Flash-Lite configuration', async () => {
   assert.equal(requestBody.generation_config.thinking_level, 'minimal')
   assert.equal(requestBody.generation_config.max_output_tokens, 400)
   assert.equal('temperature' in requestBody.generation_config, false)
-  assert.match(requestBody.system_instruction, /Reply in English.*even when the visitor writes in another language/)
+  assert.match(requestBody.system_instruction, /Reply exclusively in English.*even when the visitor writes in another language/)
+  assert.match(requestBody.system_instruction, /questionScope.entityIds/)
+  assert.match(requestBody.system_instruction, /never borrow results, metrics, processes or team details from another company/)
+  assert.match(requestBody.system_instruction, /without naming a company/)
 })
 
 test('builds Bogotá date keys and reads the first forwarded IP', () => {
@@ -225,4 +270,41 @@ test('defaults the global Gemini daily limit to 15', async () => {
 
   assert.equal(args[0], 15)
   assert.equal(result.remaining, 14)
+})
+
+test('uses the selected language for local answers and contextual fallbacks', () => {
+  for (const language of ['es', 'en']) {
+    const first = preparePortfolioRequest('What does Mateo do?', [], language)
+    const followUp = preparePortfolioRequest('¿Qué resultados tuvo?', [{ role: 'assistant', content: 'MiBanco', projectIds: ['mibanco'] }], language)
+    assert.equal(first.localAnswer.language, language)
+    assert.equal(followUp.localAnswer.language, language)
+    assert.match(first.localAnswer.text, language === 'es' ? /Mateo es diseñador de producto/ : /Mateo is a product designer/)
+    assert.match(followUp.localAnswer.text, language === 'es' ? /resultados documentados/ : /documented outcomes/)
+  }
+})
+
+test('instructs Gemini to translate context into the selected language', async () => {
+  for (const language of ['es', 'en']) {
+    await askGemini({ apiKey: 'test-key', context: '{}', history: [], question: 'Responde en otro idioma', language,
+      fetchImpl: async (_url, options) => {
+        const { system_instruction } = JSON.parse(options.body)
+        assert.match(system_instruction, new RegExp(`Reply exclusively in ${language === 'es' ? 'Spanish' : 'English'}`))
+        assert.match(system_instruction, /Never mix English and Spanish/)
+        return Response.json({ steps: [{ type: 'model_output', content: [{ type: 'text', text: 'Mateo' }] }] })
+      },
+    })
+  }
+})
+
+test('the route preserves Spanish for deterministic, unconfigured and validation responses', async () => {
+  for (const question of ['What does Mateo do?', 'Tell me his opinion about typography']) {
+    const response = await POST(new Request('https://portfolio.test/api/chat', { method: 'POST', body: JSON.stringify({ question, language: 'es' }) }))
+    const payload = await response.json()
+    assert.equal(payload.language, 'es')
+    assert.equal(payload.source, 'local')
+    assert.doesNotMatch(payload.text, /Mateo is|I couldn't/)
+  }
+  const response = await POST(new Request('https://portfolio.test/api/chat', { method: 'POST', body: JSON.stringify({ question: '', language: 'es' }) }))
+  assert.equal(response.status, 400)
+  assert.match((await response.json()).error, /La pregunta/)
 })

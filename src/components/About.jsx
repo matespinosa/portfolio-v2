@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -9,6 +10,8 @@ const STATEMENT =
   'I design financial products with the clarity of a system and the pragmatism of code.'
 
 export default function About() {
+  const { t } = useLanguage()
+  const statement = t(STATEMENT)
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -43,49 +46,36 @@ export default function About() {
 
   return (
     <section className="about container" id="practice" ref={rootRef}>
-      <h2 className="visually-hidden">The practice</h2>
-      <p className="about-statement" aria-label={STATEMENT}>
-        {STATEMENT.split(' ').map((word, i) => (
-          // eslint-disable-next-line react/no-array-index-key
+      <h2 className="visually-hidden">{t("The practice")}</h2>
+      <p className="about-statement" aria-label={statement}>
+        {statement.split(' ').map((word, i) => (
           <span className="word" key={i} aria-hidden="true">
             {word}
-            {i < STATEMENT.split(' ').length - 1 ? ' ' : ''}
+            {i < statement.split(' ').length - 1 ? ' ' : ''}
           </span>
         ))}
       </p>
       <div className="about-grid">
         <div className="about-bio">
-          <p>
-            I am Mateo Espinosa, a product designer based in Bogotá with more than six years
-            across digital products and frontend. I combine a business mindset, analytical
-            thinking and hands-on research to make complex decisions clear. My work spans
-            merchant platforms at <strong>Rappi</strong> and financial products for
-            <strong> Credicorp Capital, Kapital Bank, MiBanco and Banca Mifel</strong>.
-            Additional client work through Modyo
-            includes Banco Mundo Mujer, Sura and PS Factory.
-          </p>
-          <p>
-            React, Next.js, HTML, CSS and JavaScript let me work closer to implementation. Since
-            2025, I have extended that practice with Cursor, Codex and Claude to prototype,
-            evaluate and ship ideas faster without giving up design judgment.
-          </p>
+          <p> {t("I am Mateo Espinosa, a product designer based in Bogotá with more than six years across digital products and frontend. I combine a business mindset, analytical thinking and hands-on research to make complex decisions clear. My work spans merchant platforms at")} <strong>{t("Rappi")}</strong> {t("and financial products for")} <strong> {t("Credicorp Capital, Kapital Bank, MiBanco and Banca Mifel")}</strong>{t(". Additional client work through Modyo includes Banco Mundo Mujer, Sura and PS Factory.")} </p>
+          <p> {t("React, Next.js, HTML, CSS and JavaScript let me work closer to implementation. Since 2025, I have extended that practice with Cursor, Codex and Claude to prototype, evaluate and ship ideas faster without giving up design judgment.")} </p>
         </div>
         <dl className="about-caps">
           <div>
-            <dt>Product</dt>
-            <dd>Financial products, merchant operations, onboarding, transactions and complex B2B flows</dd>
+            <dt>{t("Product")}</dt>
+            <dd>{t("Financial products, merchant operations, onboarding, transactions and complex B2B flows")}</dd>
           </div>
           <div>
-            <dt>Research</dt>
-            <dd>Customer interviews, benchmarks, journey maps, prioritization and usability testing</dd>
+            <dt>{t("Research")}</dt>
+            <dd>{t("Customer interviews, benchmarks, journey maps, prioritization and usability testing")}</dd>
           </div>
           <div>
-            <dt>Systems</dt>
-            <dd>Design tokens, component libraries, documentation and product governance</dd>
+            <dt>{t("Systems")}</dt>
+            <dd>{t("Design tokens, component libraries, documentation and product governance")}</dd>
           </div>
           <div>
-            <dt>Frontend &amp; AI</dt>
-            <dd>React, Next.js, HTML, CSS, JavaScript, Cursor, Codex and Claude</dd>
+            <dt>{t("Frontend & AI")}</dt>
+            <dd>{t("React, Next.js, HTML, CSS, JavaScript, Cursor, Codex and Claude")}</dd>
           </div>
         </dl>
       </div>

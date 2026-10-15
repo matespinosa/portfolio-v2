@@ -1,3 +1,5 @@
+import { normalizeQuestion as normalize } from './portfolioEntities.js'
+
 const METRIC_TERMS = [
   'metric',
   'metrics',
@@ -93,16 +95,6 @@ const PROFILE_TERMS = {
   ],
 }
 
-function normalize(value) {
-  return String(value || '')
-    .toLocaleLowerCase('en')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9+#.\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
 function includesTerm(normalized, terms) {
   const tokens = new Set(normalized.split(' ').filter(Boolean))
   return terms.some((term) => {
@@ -150,6 +142,21 @@ const FOLLOW_UP_REFERENCES = [
 ]
 
 const FOLLOW_UP_INTENTS = [
+  'results',
+  'outcomes',
+  'impact',
+  'process',
+  'role',
+  'team',
+  'duration',
+  'how long',
+  'resultados',
+  'impacto',
+  'proceso',
+  'rol',
+  'equipo',
+  'duracion',
+  'cuanto tiempo',
   'compare the results',
   'what results',
   'what impact',
@@ -217,7 +224,9 @@ export function classifyPortfolioPresentation({ question, answer }) {
   if (answer?.kind === 'profile-summary') return { kind: 'profile-overview', topic: 'profile' }
   if (answer?.confidence === 'low') return { kind: 'suggestions', topic: 'fallback' }
 
-  const profile = profileTopic(normalized)
+  if (answer?.kind === 'current-role' || (projectIds.length === 1 && projectIds[0] === 'rappi')) return { kind: 'profile-facts', topic: 'current' }
+
+  const profile = projectIds.length ? undefined : profileTopic(normalized)
   if (profile) return { kind: 'profile-facts', topic: profile }
 
   if (includesTerm(normalized, METRIC_TERMS)) {

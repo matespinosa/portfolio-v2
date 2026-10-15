@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { finePointer, reducedMotion } from '../lib/scroll'
@@ -8,6 +9,7 @@ import { finePointer, reducedMotion } from '../lib/scroll'
  * Elements opt in via data-cursor="link" | "view" and data-cursor-label.
  */
 export default function Cursor({ drawing = false }) {
+  const { t } = useLanguage()
   const [enabled, setEnabled] = useState(false)
   const dotRef = useRef(null)
   const ringRef = useRef(null)
@@ -49,7 +51,7 @@ export default function Cursor({ drawing = false }) {
         document.body.dataset.cursorMode = mode
         if (labelRef.current) {
           labelRef.current.textContent =
-            target.dataset.cursorLabel || (mode === 'view' ? 'View' : '')
+            target.dataset.cursorLabel || (mode === 'view' ? t('View') : '')
         }
       } else {
         delete document.body.dataset.cursorMode
@@ -72,7 +74,7 @@ export default function Cursor({ drawing = false }) {
       document.removeEventListener('pointerover', onOver)
       document.documentElement.removeEventListener('pointerleave', onLeave)
     }
-  }, [enabled])
+  }, [enabled, t])
 
   if (!enabled) return null
 

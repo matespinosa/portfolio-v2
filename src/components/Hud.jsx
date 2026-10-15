@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef, useState } from 'react'
 import { TOKENS, FORMATS, formatToken, applyFormat } from '../lib/tokens'
 
@@ -8,6 +9,7 @@ const SHOWN_TOKENS = ['--primary', '--surface']
  * rewrites the real custom properties on :root, and the tool toggles.
  */
 export default function Hud({ tools, onToggle, format, onFormat }) {
+  const { t } = useLanguage()
   const [fps, setFps] = useState(60)
   const [latency, setLatency] = useState(0)
   const [viewport, setViewport] = useState({ w: 0, h: 0 })
@@ -51,10 +53,10 @@ export default function Hud({ tools, onToggle, format, onFormat }) {
   }
 
   return (
-    <aside className={`hud ${open ? '' : 'is-collapsed'}`} aria-label="Instrument panel">
+    <aside className={`hud ${open ? '' : 'is-collapsed'}`} aria-label={t("Instrument panel")}>
       <header className="hud-bar">
         <span className="hud-dot" data-state={fps >= 50 ? 'ok' : 'warn'} aria-hidden="true" />
-        <h2 className="hud-title">runtime</h2>
+        <h2 className="hud-title">{t("runtime")}</h2>
         <button
           type="button"
           className="hud-collapse"
@@ -72,11 +74,11 @@ export default function Hud({ tools, onToggle, format, onFormat }) {
             <dd>{fps}</dd>
           </div>
           <div>
-            <dt>frame</dt>
+            <dt>{t("frame")}</dt>
             <dd>{latency.toFixed(1)}ms</dd>
           </div>
           <div>
-            <dt>viewport</dt>
+            <dt>{t("viewport")}</dt>
             <dd>
               {viewport.w}×{viewport.h}
             </dd>
@@ -85,7 +87,7 @@ export default function Hud({ tools, onToggle, format, onFormat }) {
 
         <div className="hud-section">
           <button type="button" className="hud-swatchbar" onClick={cycleFormat}>
-            <span className="hud-label">color space</span>
+            <span className="hud-label">{t("color space")}</span>
             <span className="hud-format">{format}</span>
           </button>
           <ul className="hud-tokens">
@@ -112,7 +114,7 @@ export default function Hud({ tools, onToggle, format, onFormat }) {
               onClick={() => onToggle(tool.id)}
               aria-pressed={tools[tool.id]}
             >
-              {tool.label}
+              {t(tool.label)}
               <kbd>{tool.hint}</kbd>
             </button>
           ))}
@@ -120,8 +122,7 @@ export default function Hud({ tools, onToggle, format, onFormat }) {
 
         <p className="hud-foot">
           <kbd>⌘</kbd>
-          <kbd>K</kbd> commands
-        </p>
+          <kbd>K</kbd> {t("commands")} </p>
       </div>
     </aside>
   )

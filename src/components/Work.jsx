@@ -1,7 +1,9 @@
+import { localizeContent } from '../lib/i18n'
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { projects } from '../data/projects'
+import { projects as sourceProjects } from '../data/projects'
 import { reducedMotion } from '../lib/scroll'
 import { useMediaQuery } from '../lib/useMediaQuery'
 
@@ -11,6 +13,8 @@ const DESKTOP_QUERY = '(min-width: 901px) and (pointer: fine)'
 const TILT = 7
 
 export default function Work({ onOpen }) {
+  const { t, language } = useLanguage()
+  const projects = localizeContent(language, sourceProjects)
   const desktop = useMediaQuery(DESKTOP_QUERY)
   const rootRef = useRef(null)
 
@@ -50,13 +54,12 @@ export default function Work({ onOpen }) {
   return (
     <section className="work container" id="work" ref={rootRef} aria-labelledby="work-title">
       <header className="section-head">
-        <h2 className="section-title" id="work-title">
-          Selected <em>fieldwork</em>
+        <h2 className="section-title" id="work-title"> {t("Selected")} <em>{t("fieldwork")}</em>
         </h2>
-        <p className="section-sub">Five products, real responsibilities</p>
+        <p className="section-sub">{t("Five products, real responsibilities")}</p>
       </header>
 
-      <ul className="work-grid" data-inspect="Work / grid">
+      <ul className="work-grid" data-inspect={t("Work / grid")}>
         {projects.map((p) => (
           <li className="work-card" key={p.id}>
             <button
@@ -76,7 +79,7 @@ export default function Work({ onOpen }) {
                 </span>
                 <img
                   src={p.heroImage}
-                  alt={`${p.title} project cover`}
+                  alt={t('Project cover: {title}', { title: p.title })}
                   loading="lazy"
                   width="840"
                   height="630"
@@ -89,9 +92,7 @@ export default function Work({ onOpen }) {
                 <span className="work-year mono">{p.year}</span>
               </span>
 
-              <span className="work-cta mono" aria-hidden="true">
-                Case study
-                <svg viewBox="0 0 18 18" fill="none">
+              <span className="work-cta mono" aria-hidden="true"> {t("Case study")} <svg viewBox="0 0 18 18" fill="none">
                   <path d="M4 14 14 4m0 0H6m8 0v8" stroke="currentColor" strokeWidth="1.4" />
                 </svg>
               </span>

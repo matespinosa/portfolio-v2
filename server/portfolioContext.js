@@ -1,8 +1,8 @@
 import { experience, projects, selectedClients } from '../src/data/projects.js'
 import { profile } from '../src/data/profile.js'
-import { PORTFOLIO_LANGUAGE } from '../src/data/language.js'
-import { answerPortfolioQuestion, canAnswerLocally, mentionedProjectIds } from '../src/lib/portfolioAssistant.js'
-import { isPortfolioFollowUp } from '../src/lib/portfolioPresentation.js'
+import { PORTFOLIO_LANGUAGE, normalizeLanguage } from '../src/data/language.js'
+import { canAnswerLocally } from '../src/lib/portfolioAssistant.js'
+import { answerPortfolioConversation } from '../src/lib/portfolioConversation.js'
 
 const MAX_HISTORY_MESSAGES = 6
 const MAX_MESSAGE_LENGTH = 1200
@@ -47,22 +47,10 @@ export function sanitizeHistory(rawHistory) {
     .filter((message) => message.content)
 }
 
-export function preparePortfolioRequest(question, rawHistory) {
+export function preparePortfolioRequest(question, rawHistory, requestedLanguage = PORTFOLIO_LANGUAGE) {
+  const language = normalizeLanguage(requestedLanguage)
   const history = sanitizeHistory(rawHistory)
-  const initialAnswer = answerPortfolioQuestion(question, { language: PORTFOLIO_LANGUAGE })
-  const explicitlyMentionedIds = mentionedProjectIds(question)
-  const latestContextIds = [...history]
-    .reverse()
-    .find((message) => message.projectIds.some((projectId) => projectId !== 'rappi'))
-    ?.projectIds.filter((projectId) => projectId !== 'rappi') || []
-  const shouldInheritContext =
-    isPortfolioFollowUp(question) &&
-    explicitlyMentionedIds.length === 0 &&
-    !initialAnswer.projectIds.includes('rappi') &&
-    latestContextIds.length > 0
-  const localAnswer = shouldInheritContext
-    ? answerPortfolioQuestion(question, { projectIds: latestContextIds, language: PORTFOLIO_LANGUAGE })
-    : initialAnswer
+  const localAnswer = answerPortfolioConversation(question, history, { language })
   const relevantIds = new Set(
     localAnswer.projectIds.filter((projectId) => KNOWN_PROJECT_IDS.has(projectId)),
   )
@@ -72,6 +60,12 @@ export function preparePortfolioRequest(question, rawHistory) {
     : projects
 
   const context = JSON.stringify({
+    questionScope: {
+      entityIds: [...relevantIds],
+      portfolioWide: !relevantIds.size || localAnswer.kind === 'profile-summary',
+      currentRoleHasPublishedCase: false,
+      currentRoleHasPublishedMetrics: false,
+    },
     profile,
     experience,
     selectedClients,

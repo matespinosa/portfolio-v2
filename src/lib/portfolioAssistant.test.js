@@ -105,7 +105,7 @@ test('understands a spaced project alias in Spanish', () => {
 
   assert.equal(answer.language, 'es')
   assert.deepEqual(answer.projectIds, ['mibanco'])
-  assert.match(answer.text, /onboarding/)
+  assert.match(answer.text, /incorporación/)
 })
 
 test('returns documented quantified metrics', () => {
@@ -162,7 +162,7 @@ test('answers questions about Rappi from the current role', () => {
 
     assert.equal(answer.confidence, 'high')
     assert.deepEqual(answer.projectIds, ['rappi'])
-    assert.match(answer.text, /Merchants/)
+    assert.match(answer.text, /Comercios/)
   }
 })
 
@@ -172,6 +172,53 @@ test('compares all cases for project-less impact, process and role questions', (
   assert.equal(impact.confidence, 'high')
   assert.equal(impact.projectIds.length, 5)
   assert.match(impact.text, /resultados documentados/)
+})
+
+test('answers the dictated question about Rappi specifically in the selected language', () => {
+  for (const language of ['es', 'en']) {
+    const answer = answerPortfolioQuestion('Que Que hace Mateo en rapi', { language })
+    assert.equal(answer.kind, 'current-role')
+    assert.equal(answer.standalone, true)
+    assert.equal(answer.language, language)
+    assert.deepEqual(answer.projectIds, ['rappi'])
+    assert.match(answer.text, language === 'es' ? /En Rappi, Mateo trabaja/ : /At Rappi, Mateo works/)
+    assert.match(answer.text, /Mi Tienda/)
+    assert.doesNotMatch(answer.text, /MiBanco|Modyo|Credicorp|six years|seis años|US\$/)
+  }
+})
+
+test('a named company takes priority over biography and profile keywords', () => {
+  for (const [name, id] of [['Modio', 'modyo'], ['Mi Banco', 'mibanco'], ['Credicrop', 'credicorp'], ['Dando', 'dando'], ['Kapittal', 'kapital']]) {
+    const answer = answerPortfolioQuestion(`¿Qué hace Mateo en ${name}?`)
+    assert.notEqual(answer.kind, 'profile-summary', name)
+    assert.deepEqual(answer.projectIds, [id], name)
+  }
+  assert.deepEqual(answerPortfolioQuestion('What is his frontend experience at MiBanco?').projectIds, ['mibanco'])
+})
+
+test('does not invent Rappi metrics, processes or teams and preserves mixed-company scope', () => {
+  for (const language of ['es', 'en']) {
+    const answer = answerPortfolioQuestion('¿Cuáles fueron los resultados de rapi?', { language })
+    assert.match(answer.text, language === 'es' ? /aún no publica métricas/ : /does not yet publish metrics/)
+    assert.deepEqual(answer.projectIds, ['rappi'])
+    assert.doesNotMatch(answer.text, /48%|158%|US\$/)
+
+    const comparison = answerPortfolioQuestion('Compare metrics for Rappi and MiBanco', { language })
+    assert.deepEqual(comparison.projectIds, ['mibanco', 'rappi'])
+    assert.match(comparison.text, /MiBanco/)
+    assert.match(comparison.text, language === 'es' ? /aún no publica métricas/ : /does not yet publish metrics/)
+  }
+})
+
+test('asks for clarification on an unknown employer instead of substituting a biography', () => {
+  for (const question of ['¿Qué hace Mateo en Nubank?', 'What does Mateo do at Acme?']) {
+    const answer = answerPortfolioQuestion(question)
+    assert.equal(answer.confidence, 'low')
+    assert.deepEqual(answer.projectIds, [])
+    assert.notEqual(answer.kind, 'profile-summary')
+    assert.match(answer.text, /Rappi, Modyo, MiBanco, Credicorp Capital, Dando/)
+  }
+  assert.deepEqual(answerPortfolioQuestion('¿Qué hace Mateo en fintech?').projectIds, ['mibanco', 'credicorp', 'dando', 'kapital'])
 })
 
 test('keeps Spanish answers free of English metric labels and section titles', () => {

@@ -6,9 +6,10 @@ import '@fontsource-variable/schibsted-grotesk'
 import '@fontsource/fragment-mono/400.css'
 import './styles/global.css'
 import App from './App.jsx'
+import { LanguageProvider } from './lib/LanguageContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <LanguageProvider><App /></LanguageProvider>
   </StrictMode>
 )

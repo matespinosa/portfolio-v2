@@ -1,8 +1,10 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { reducedMotion } from '../lib/scroll'
 
 export default function Preloader({ onDone }) {
+  const { t } = useLanguage()
   const rootRef = useRef(null)
   const countRef = useRef(null)
   const started = useRef(false)
@@ -47,7 +49,7 @@ export default function Preloader({ onDone }) {
 
   return (
     <div className="preloader" ref={rootRef} aria-hidden="true">
-      <span className="preloader-tag">Mateo Espinosa · Product Designer · 2026</span>
+      <span className="preloader-tag">{t("Mateo Espinosa · Product Designer · 2026")}</span>
       <span className="preloader-count" ref={countRef}>
         000
       </span>

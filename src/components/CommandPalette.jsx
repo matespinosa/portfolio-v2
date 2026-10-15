@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -15,6 +16,7 @@ function matches(query, text) {
 }
 
 export default function CommandPalette({ open, onClose, commands }) {
+  const { t } = useLanguage()
   const [query, setQuery] = useState('')
   const [index, setIndex] = useState(0)
   const inputRef = useRef(null)
@@ -75,7 +77,7 @@ export default function CommandPalette({ open, onClose, commands }) {
         className="palette"
         role="dialog"
         aria-modal="true"
-        aria-label="Command palette"
+        aria-label={t("Command palette")}
         onPointerDown={(e) => e.stopPropagation()}
       >
         <div className="palette-input">
@@ -86,8 +88,8 @@ export default function CommandPalette({ open, onClose, commands }) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Jump to a section, toggle a tool…"
-            aria-label="Search commands"
+            placeholder={t("Jump to a section, toggle a tool…")}
+            aria-label={t("Search commands")}
             spellCheck="false"
           />
           <kbd>esc</kbd>
@@ -111,7 +113,7 @@ export default function CommandPalette({ open, onClose, commands }) {
               </button>
             </li>
           ))}
-          {results.length === 0 && <li className="palette-empty">No command matches “{query}”</li>}
+          {results.length === 0 && <li className="palette-empty">{t('No command matches “{query}”', { query })}</li>}
         </ul>
       </div>
     </div>,

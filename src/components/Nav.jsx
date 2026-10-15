@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -13,10 +14,10 @@ const LINKS = [
   { label: 'Contact', href: '#contact' },
 ]
 
-function useBogotaClock() {
+function useBogotaClock(locale) {
   const [time, setTime] = useState('')
   useEffect(() => {
-    const fmt = new Intl.DateTimeFormat('en-US', {
+    const fmt = new Intl.DateTimeFormat(locale, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
@@ -26,13 +27,14 @@ function useBogotaClock() {
     tick()
     const id = setInterval(tick, 30_000)
     return () => clearInterval(id)
-  }, [])
+  }, [locale])
   return time
 }
 
 export default function Nav({ ready, onCommand }) {
+  const { t, language, locale, setLanguage } = useLanguage()
   const ref = useRef(null)
-  const time = useBogotaClock()
+  const time = useBogotaClock(locale)
 
   useEffect(() => {
     if (!ready || reducedMotion()) return
@@ -79,11 +81,11 @@ export default function Nav({ ready, onCommand }) {
         href="#top"
         onClick={(e) => go(e, 0)}
         data-cursor="link"
-        aria-label="Mateo Espinosa - back to top"
+        aria-label={t("Mateo Espinosa - back to top")}
       >
         Mateo Espinosa
       </a>
-      <nav className="nav-right" aria-label="Site">
+      <nav className="nav-right" aria-label={t("Site")}>
         {LINKS.map((l) => (
           <a
             key={l.href}
@@ -93,15 +95,24 @@ export default function Nav({ ready, onCommand }) {
             data-cursor="link"
             data-optional={l.optional ? '' : undefined}
           >
-            {l.label}
+            {t(l.label)}
           </a>
         ))}
-        <span className="nav-clock mono" aria-label="Local time in Bogotá">
+        <div className="nav-language" role="group" aria-label={t('Language')}>
+          {['en', 'es'].map((option) => (
+            <button key={option} type="button" lang={option}
+              aria-label={option === 'en' ? 'English' : 'Español'}
+              aria-pressed={language === option} onClick={() => setLanguage(option)}>
+              {option.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        <span className="nav-clock mono" aria-label={t("Local time in Bogotá")}>
           BOG {time}
         </span>
         <button type="button" className="nav-command" onClick={onCommand} data-cursor="link">
-          <span className="mono">Search</span>
-          <kbd>⌘K</kbd>
+          <span className="mono">{t("Search")}</span>
+          <kbd>{t("⌘K")}</kbd>
         </button>
       </nav>
     </header>

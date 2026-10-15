@@ -11,11 +11,11 @@ import {
   Sparkle,
   TrendUp,
   User,
-  UsersThree,
 } from '@phosphor-icons/react'
 import { experience, projects } from '../data/projects'
 import { profile } from '../data/profile'
-import { PORTFOLIO_LANGUAGE } from '../data/language'
+import { useLanguage } from '../lib/useLanguage'
+import { localizeContent, translate } from '../lib/i18n'
 import { cleanAssistantText, responseLead } from '../lib/portfolioPresentation'
 import {
   CURRENT_ROLE_ES,
@@ -32,55 +32,27 @@ const PROJECT_COPY_ES = {
   modyo: {
     title: 'Modyo Platform',
     category: 'DXP · sistema de diseño',
-    summary: 'Unificó una plataforma compleja y sus herramientas low-code en un sistema compartido.',
+    summary: 'Unificó una plataforma compleja y sus herramientas de desarrollo visual en un sistema compartido.',
   },
   mibanco: {
     title: 'MiBanco',
-    category: 'Banca digital · onboarding',
+    category: 'Banca digital · apertura de cuentas',
     summary: 'Rediseñó el canal transaccional y la apertura de cuentas.',
   },
   credicorp: {
     title: 'Credicorp Capital',
-    category: 'Tesorería · FX corporativo',
+    category: 'Tesorería · Divisas corporativas',
     summary: 'Digitalizó negociación, cumplimiento y liquidación de divisas.',
   },
   dando: {
     title: 'Dando by CFG',
-    category: 'Crédito digital · KYC',
-    summary: 'Diseñó préstamos 100% digitales con simulador y backoffice.',
+    category: 'Crédito digital · Verificación de identidad',
+    summary: 'Diseñó préstamos 100% digitales con simulador y operación interna.',
   },
   kapital: {
     title: 'Kapital Colombia',
     category: 'Factoring · financiamiento pymes',
     summary: 'Lideró de principio a fin el factoring en Colombia sobre CesionBnk y RADIAN.',
-  },
-}
-
-const ROLE_COPY_ES = {
-  modyo: {
-    role: 'Product Designer · Investigación · Sistema de diseño',
-    scope: 'Modyo 10, herramientas low-code y fundamentos compartidos de producto.',
-    team: 'Ingeniería, producto, marketing y equipos usuarios de la plataforma.',
-  },
-  mibanco: {
-    role: 'Senior Product Designer · Discovery · Sistema de diseño',
-    scope: 'Onboarding, transacciones, crédito y gestión de CDTs.',
-    team: 'Producto, investigación, desarrollo, QA y branding.',
-  },
-  credicorp: {
-    role: 'Product Designer · Discovery · Rebranding',
-    scope: 'Transacciones, backoffice, FX y formularios de cumplimiento.',
-    team: 'Clientes corporativos, tesorería, operaciones e ingeniería.',
-  },
-  dando: {
-    role: 'Product Designer · Discovery · Sistema de diseño',
-    scope: 'Simulador de crédito, KYC, onboarding y backoffice comercial.',
-    team: 'CFG Partners, ventas, riesgo, tesorería e ingeniería.',
-  },
-  kapital: {
-    role: 'Lead Product Designer · De principio a fin',
-    scope: 'Benchmark, reglas de negocio, integración con CesionBnk y RADIAN, y dashboard de factoring.',
-    team: 'Country Manager Colombia, producto México y Colombia, comercial, contabilidad e ingeniería.',
   },
 }
 
@@ -242,7 +214,7 @@ function ProjectEvidenceRow({ project, language, onOpenProject, displayIndex }) 
       <img
         className="portfolio-response__evidence-image"
         src={project.heroImage}
-        alt={`${copy.title || project.title} project cover`}
+        alt={translate(language, 'Project cover: {title}', { title: copy.title || project.title })}
         loading="lazy"
       />
       <span className="portfolio-response__evidence-copy">
@@ -504,7 +476,7 @@ function RoleBrief({ projectList, language, onOpenProject, onAsk, isSending }) {
         {projectList.map((project) => (
           <section key={project.id}>
             {(() => {
-              const copy = language === 'es' ? ROLE_COPY_ES[project.id] : project
+              const copy = localizeContent(language, project)
               return (
                 <>
             <header>
@@ -546,7 +518,7 @@ function RoleBrief({ projectList, language, onOpenProject, onAsk, isSending }) {
   )
 }
 
-function ProfileFacts({ topic, language }) {
+function ProfileFacts({ topic, language, showCurrentRoleLimit = false }) {
   if (topic === 'experience') {
     return (
       <ol className="portfolio-response__timeline">
@@ -610,13 +582,20 @@ function ProfileFacts({ topic, language }) {
       <ul>
         {content.facts.map((fact) => <li key={fact}>{fact}</li>)}
       </ul>
+      {showCurrentRoleLimit && topic === 'current' && (
+        <p className="portfolio-response__summary">
+          {language === 'es'
+            ? 'La información publicada de Rappi cubre su rol actual. Aún no hay un caso detallado ni resultados medidos.'
+            : 'The published Rappi information covers his current role. A detailed case and measured outcomes are not yet available.'}
+        </p>
+      )}
     </section>
   )
 }
 
 const OVERVIEW_FACTS = {
   es: [
-    { label: 'ROL ACTUAL', value: 'Product Designer · Merchants', detail: profile.currentRole.company },
+    { label: 'ROL ACTUAL', value: 'Diseñador de producto · Comercios', detail: profile.currentRole.company },
     { label: 'EXPERIENCIA', value: '6+ años', detail: '5+ en diseño de producto' },
     { label: 'FOCO', value: 'Productos financieros', detail: 'Plataformas B2B · sistemas de diseño' },
     { label: 'PRÁCTICA', value: 'Diseño + frontend', detail: 'React · Next.js · IA' },
@@ -701,8 +680,8 @@ function ProjectSpotlight({ project, language, onOpenProject, onAsk, isSending }
 }
 
 export default function PortfolioResponse({ message, onAsk, onOpenProject, isSending }) {
-  const language = PORTFOLIO_LANGUAGE
-  const projectList = useMemo(() => selectedProjects(message.projectIds), [message.projectIds])
+  const { language } = useLanguage()
+  const projectList = useMemo(() => localizeContent(language, selectedProjects(message.projectIds)), [message.projectIds, language])
   const kind = message.presentation?.kind || 'narrative'
   const rich = !['narrative', 'suggestions'].includes(kind)
   const lead = responseLead(message.content, { rich, maxLength: rich ? 600 : 900 })
@@ -805,11 +784,8 @@ export default function PortfolioResponse({ message, onAsk, onOpenProject, isSen
         </div>
       )}
 
-      {kind === 'narrative' && message.projectIds?.includes('rappi') && (
-        <div className="portfolio-response__inline-fact">
-          <UsersThree size={18} aria-hidden="true" />
-          <span>{profile.currentRole.role}</span>
-        </div>
+      {message.projectIds?.includes('rappi') && projectList.length > 0 && (
+        <ProfileFacts topic="current" language={language} showCurrentRoleLimit />
       )}
     </div>
   )

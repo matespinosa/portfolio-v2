@@ -114,3 +114,16 @@ test('uses the profile overview for portfolio-wide summaries', () => {
     'experience',
   )
 })
+
+test('shows only the current role for Rappi, including transcription errors and metric follow-ups', () => {
+  for (const question of ['Que Que hace Mateo en rapi', '¿Y qué resultados tuvo?', 'How was the design process?']) {
+    assert.deepEqual(classifyPortfolioPresentation({ question, answer: { ...answer(['rappi']), kind: 'current-role' } }),
+      { kind: 'profile-facts', topic: 'current' })
+  }
+})
+
+test('company-specific and mixed-company answers are not replaced by general profile cards', () => {
+  assert.equal(classifyPortfolioPresentation({ question: 'What is his frontend experience at MiBanco?', answer: answer(['mibanco']) }).kind, 'project-spotlight')
+  assert.equal(classifyPortfolioPresentation({ question: 'What does he do at Rappi and MiBanco?', answer: answer(['mibanco', 'rappi']) }).kind, 'project-carousel')
+  assert.equal(classifyPortfolioPresentation({ question: 'Compare the results at Rappi and MiBanco', answer: answer(['mibanco', 'rappi']) }).kind, 'metric-grid')
+})

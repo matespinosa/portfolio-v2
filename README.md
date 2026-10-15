@@ -12,6 +12,19 @@ npm install
 npm run dev
 ```
 
+Use the EN / ES selector in the navigation to change the entire portfolio language. The selection
+persists across visits. Interface copy, case studies, dictation and both local and Gemini answers use
+the selected language, including when a question is written in the other language. Chat histories
+are kept separately per language in the current browser tab. Earlier chat sessions are not restored
+because they may contain mixed-language answers.
+
+Voice dictation first requests microphone permission, then starts speech recognition. If the browser's
+speech service fails, it switches to multilingual Whisper running on the visitor's device in a worker.
+This fallback downloads and caches its speech model on first use, requires no API key or Gemini quota,
+and keeps recorded audio on the device. Speak when the listening message appears, then press stop to
+transcribe; recordings are limited to 30 seconds. Canceling, editing, sending or closing the chat
+releases the microphone and ignores late results.
+
 The portfolio guide searches the structured profile and project data with Fuse.js. High-confidence
 questions can still be answered locally, while follow-ups and ambiguous questions use Gemini 3.5
 Flash-Lite through a Vercel Function. If Gemini, Redis or the daily quota is unavailable, the local

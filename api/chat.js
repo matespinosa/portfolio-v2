@@ -1,3 +1,6 @@
+import { normalizeLanguage } from '../src/data/language.js'
+import { translate } from '../src/lib/i18n.js'
+
 import { askGemini } from '../server/gemini.js'
 import { preparePortfolioRequest, shouldUseGemini } from '../server/portfolioContext.js'
 import { createRateLimitStore, reserveGeminiRequest } from '../server/rateLimit.js'
@@ -23,18 +26,22 @@ export async function POST(request) {
   try {
     body = await request.json()
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400, headers: NO_STORE_HEADERS })
-  }
-
-  const question = typeof body?.question === 'string' ? body.question.trim() : ''
-  if (!question || question.length > 1200) {
     return Response.json(
-      { error: 'Question must contain between 1 and 1200 characters' },
+      { error: translate(normalizeLanguage(request.headers.get('Accept-Language')), 'Invalid JSON body') },
       { status: 400, headers: NO_STORE_HEADERS },
     )
   }
 
-  const prepared = preparePortfolioRequest(question, body.history)
+  const language = normalizeLanguage(body?.language)
+  const question = typeof body?.question === 'string' ? body.question.trim() : ''
+  if (!question || question.length > 1200) {
+    return Response.json(
+      { error: translate(language, 'Question must contain between 1 and 1200 characters') },
+      { status: 400, headers: NO_STORE_HEADERS },
+    )
+  }
+
+  const prepared = preparePortfolioRequest(question, body.history, language)
 
   if (!shouldUseGemini(prepared)) {
     return Response.json(
@@ -80,6 +87,7 @@ export async function POST(request) {
       context: prepared.context,
       history: prepared.history,
       question,
+      language,
     })
 
     return Response.json(

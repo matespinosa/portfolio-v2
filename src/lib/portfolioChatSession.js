@@ -1,9 +1,10 @@
 import { SHORT_TITLES } from '../data/copyEs.js'
-import { PORTFOLIO_LANGUAGE } from '../data/language.js'
+import { PORTFOLIO_LANGUAGE, normalizeLanguage } from '../data/language.js'
+import { translate } from './i18n.js'
 import { cleanAssistantText } from './portfolioPresentation.js'
 
 // Keep older conversations in their original language instead of restoring mixed copy.
-const STORAGE_KEY = `portfolio-chat-session-v1-${PORTFOLIO_LANGUAGE}`
+const storageKey = (language) => `portfolio-chat-session-v2-${normalizeLanguage(language)}`
 const MAX_MESSAGES = 40
 const MAX_CONTENT_LENGTH = 6000
 
@@ -51,14 +52,15 @@ function cleanMessage(raw) {
 
 // Restores the conversation for this browser tab. A trailing question without an answer
 // is dropped: its reply was lost when the page unloaded.
-export function loadChatSession(storage = defaultStorage()) {
+export function loadChatSession(storage = defaultStorage(), language = PORTFOLIO_LANGUAGE) {
   if (!storage) return []
 
   try {
-    const parsed = JSON.parse(storage.getItem(STORAGE_KEY) || '[]')
+    const parsed = JSON.parse(storage.getItem(storageKey(language)) || '[]')
     if (!Array.isArray(parsed)) return []
 
     const messages = parsed.slice(-MAX_MESSAGES).map(cleanMessage).filter(Boolean)
+    if (messages.some((message) => message.role === 'assistant' && message.language !== normalizeLanguage(language))) return []
     while (messages.at(-1)?.role === 'user') messages.pop()
     return messages
   } catch {
@@ -66,19 +68,19 @@ export function loadChatSession(storage = defaultStorage()) {
   }
 }
 
-export function saveChatSession(messages, storage = defaultStorage()) {
+export function saveChatSession(messages, storage = defaultStorage(), language = PORTFOLIO_LANGUAGE) {
   if (!storage) return
 
   try {
-    if (!messages.length) storage.removeItem(STORAGE_KEY)
-    else storage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_MESSAGES)))
+    if (!messages.length) storage.removeItem(storageKey(language))
+    else storage.setItem(storageKey(language), JSON.stringify(messages.slice(-MAX_MESSAGES)))
   } catch {
     // Storage can be full or blocked; the conversation still works in memory.
   }
 }
 
-export function clearChatSession(storage = defaultStorage()) {
-  saveChatSession([], storage)
+export function clearChatSession(storage = defaultStorage(), language = PORTFOLIO_LANGUAGE) {
+  saveChatSession([], storage, language)
 }
 
 function topicsOf(answer) {
@@ -92,14 +94,14 @@ function topicsOf(answer) {
 }
 
 // What the section shows after the window is closed.
-export function summarizeChat(messages) {
+export function summarizeChat(messages, language = PORTFOLIO_LANGUAGE) {
   const questions = messages.filter((message) => message.role === 'user')
   const answers = messages.filter((message) => message.role === 'assistant')
 
   return {
     questionCount: questions.length,
     answerCount: answers.length,
-    topics: [...new Set(answers.flatMap(topicsOf))],
+    topics: [...new Set(answers.flatMap(topicsOf).map((topic) => translate(language, topic)))],
     lastQuestion: questions.at(-1)?.content || '',
     lastAnswer: cleanAssistantText(answers.at(-1)?.content || ''),
   }

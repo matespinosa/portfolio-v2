@@ -1,3 +1,5 @@
+import { answerPortfolioConversation } from '../lib/portfolioConversation'
+import { useLanguage } from '../lib/useLanguage'
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal, flushSync } from 'react-dom'
 import {
@@ -9,14 +11,16 @@ import {
   Stop,
   X,
 } from '@phosphor-icons/react'
-import { answerPortfolioQuestion, canAnswerLocally, mentionedProjectIds } from '../lib/portfolioAssistant'
+import { canAnswerLocally } from '../lib/portfolioAssistant'
 import { requestPortfolioAnswer, serializeChatHistory } from '../lib/portfolioChatApi'
-import { classifyPortfolioPresentation, isPortfolioFollowUp } from '../lib/portfolioPresentation'
+import { classifyPortfolioPresentation } from '../lib/portfolioPresentation'
 import { useMediaQuery } from '../lib/useMediaQuery'
 import { observeChatViewport } from '../lib/chatViewport'
+import { createLocalDictation } from '../lib/portfolioLocalDictation'
+import { browserSpeech } from '../lib/portfolioSpeechClient'
 import { createPortfolioDictation } from '../lib/portfolioDictation'
 import { lockScroll } from '../lib/scroll'
-import { PORTFOLIO_LANGUAGE, PORTFOLIO_LOCALE } from '../data/language'
+import { localizeContent } from '../lib/i18n'
 import PortfolioAiOrb from './PortfolioAiOrb'
 import PortfolioResponse from './PortfolioResponse'
 import PortfolioChatSummary from './PortfolioChatSummary'
@@ -55,23 +59,24 @@ const STARTER_COPY = {
 // While the chat is open on desktop, the section behind the drawer keeps the chat box in its
 // default state; the conversation itself lives only in the drawer.
 function ChatDefaultBackdrop() {
+  const { t, language } = useLanguage()
   return (
     <div className="portfolio-chat__backdrop" inert aria-hidden="true">
       <div className="portfolio-chat__stage" data-mode="starter" data-expanded="false">
         <aside className="portfolio-chat__rail">
           <div>
-            <p className="mono">Portfolio intelligence</p>
-            <h2>Editorial desk</h2>
-            <span className="portfolio-chat__rail-state"><i /> Local · Ready</span>
+            <p className="mono">{t("Portfolio intelligence")}</p>
+            <h2>{t("Editorial desk")}</h2>
+            <span className="portfolio-chat__rail-state"><i /> {t("Local · Ready")}</span>
           </div>
           <div className="portfolio-chat__rail-conversation">
-            <p className="mono">Conversation</p>
-            <strong>0 questions · 0 answers</strong>
-            <span>Start a conversation about Mateo’s work.</span>
+            <p className="mono">{t("Conversation")}</p>
+            <strong>{t("0 questions · 0 answers")}</strong>
+            <span>{t("Start a conversation about Mateo’s work.")}</span>
           </div>
           <nav className="portfolio-chat__rail-topics">
-            <p className="mono">Exploring</p>
-            {STARTER_SUGGESTIONS.map((suggestion, index) => (
+            <p className="mono">{t("Exploring")}</p>
+            {localizeContent(language, STARTER_SUGGESTIONS).map((suggestion, index) => (
               <button type="button" key={suggestion.label} tabIndex={-1}>
                 <span>{String(index + 1).padStart(2, '0')}</span>
                 {suggestion.label}
@@ -79,8 +84,8 @@ function ChatDefaultBackdrop() {
             ))}
           </nav>
           <div className="portfolio-chat__rail-note">
-            <p>{STARTER_COPY.railNote}</p>
-            <span className="mono">Ask anything.</span>
+            <p>{t(STARTER_COPY.railNote)}</p>
+            <span className="mono">{t("Ask anything.")}</span>
           </div>
         </aside>
         <div className="portfolio-chat__workspace">
@@ -89,17 +94,17 @@ function ChatDefaultBackdrop() {
               <img className="portfolio-chat__mark" src="/favicon.svg" alt="" />
               <span className="portfolio-chat__identity-copy">
                 <strong>
-                  <span className="portfolio-chat__identity-desktop">Mateo portfolio guide</span>
-                  <span className="portfolio-chat__identity-mobile">Portfolio guide</span>
+                  <span className="portfolio-chat__identity-desktop">{t("Mateo portfolio guide")}</span>
+                  <span className="portfolio-chat__identity-mobile">{t("Portfolio guide")}</span>
                 </strong>
-                <small>Answers from this portfolio only</small>
+                <small>{t("Answers from this portfolio only")}</small>
               </span>
             </div>
             <div className="portfolio-chat__header-actions">
               <span className="portfolio-chat__state" data-state="ready">
                 <i />
-                <span className="portfolio-chat__state-label--desktop">Local · Ready</span>
-                <span className="portfolio-chat__state-label--mobile">Local · Ready</span>
+                <span className="portfolio-chat__state-label--desktop">{t("Local · Ready")}</span>
+                <span className="portfolio-chat__state-label--mobile">{t("Local · Ready")}</span>
               </span>
               <button type="button" className="portfolio-chat__expand" tabIndex={-1}>
                 <ArrowsOutSimple size={18} />
@@ -108,12 +113,12 @@ function ChatDefaultBackdrop() {
           </header>
           <div className="portfolio-chat__starter">
             <PortfolioAiOrb state="idle" />
-            <p className="portfolio-chat__starter-kicker mono">{STARTER_COPY.kicker}</p>
-            <h2>{STARTER_COPY.title}</h2>
-            <p>{STARTER_COPY.body}</p>
+            <p className="portfolio-chat__starter-kicker mono">{t(STARTER_COPY.kicker)}</p>
+            <h2>{t(STARTER_COPY.title)}</h2>
+            <p>{t(STARTER_COPY.body)}</p>
             <div className="portfolio-chat__composer" data-mode="starter">
               <form className="portfolio-chat__form" onSubmit={(event) => event.preventDefault()}>
-                <textarea rows="1" readOnly tabIndex={-1} value="" placeholder={STARTER_COPY.placeholder} />
+                <textarea rows="1" readOnly tabIndex={-1} value="" placeholder={t(STARTER_COPY.placeholder)} />
                 <div className="portfolio-chat__controls">
                   <button className="portfolio-chat__voice" type="button" tabIndex={-1}>
                     <Microphone size={19} />
@@ -124,12 +129,12 @@ function ChatDefaultBackdrop() {
                 </div>
               </form>
               <div className="portfolio-chat__suggestions">
-                {STARTER_SUGGESTIONS.map((suggestion) => (
+                {localizeContent(language, STARTER_SUGGESTIONS).map((suggestion) => (
                   <button type="button" key={suggestion.label} tabIndex={-1}>{suggestion.label}</button>
                 ))}
               </div>
               <p className="portfolio-chat__voice-feedback" />
-              <footer className="portfolio-chat__meta">{STARTER_COPY.meta}</footer>
+              <footer className="portfolio-chat__meta">{t(STARTER_COPY.meta)}</footer>
             </div>
           </div>
         </div>
@@ -143,8 +148,9 @@ function makeId() {
 }
 
 export default function PortfolioChat({ onOpenProject }) {
+  const { t, language, locale } = useLanguage()
   const mobileChat = useMediaQuery(MOBILE_CHAT_QUERY)
-  const [messages, setMessages] = useState(loadChatSession)
+  const [messages, setMessages] = useState(() => loadChatSession(undefined, language))
   const [draft, setDraft] = useState('')
   const [panelOpen, setPanelOpen] = useState(false)
   const [isSending, setIsSending] = useState(false)
@@ -176,13 +182,13 @@ export default function PortfolioChat({ onOpenProject }) {
   )
   // Closed window with a conversation: the chat box keeps its starter layout with a summary under the composer.
   const showSummary = questionCount > 0 && !panelOpen
-  const summary = useMemo(() => summarizeChat(messages), [messages])
+  const summary = useMemo(() => summarizeChat(messages, language), [messages, language])
   const awaitingFirstAnswer = isSending && responseCount === 0
   const isInitial = messages.length === 0 || awaitingFirstAnswer
   const starterLayout = isInitial || showSummary
-  const orbState = isSending
+  const orbState = isSending || voiceState === 'transcribing'
     ? 'thinking'
-    : isListening
+    : voiceState === 'listening'
       ? 'listening'
       : draft.trim()
         ? 'typing'
@@ -211,18 +217,18 @@ export default function PortfolioChat({ onOpenProject }) {
 
   // The conversation survives a reload in this tab, but not a new session.
   useEffect(() => {
-    saveChatSession(messages)
-  }, [messages])
+    saveChatSession(messages, undefined, language)
+  }, [messages, language])
 
   const resetConversation = useCallback(() => {
     dictationRef.current?.cancel()
-    clearChatSession()
+    clearChatSession(undefined, language)
     lastScrolledIdRef.current = null
     setMessages([])
     setDraft('')
     setVoiceFeedback('')
     setAssistantStatus({ label: 'Local · Ready', state: 'ready' })
-  }, [])
+  }, [language])
 
   // Closing the window hands focus to the summary, unless something else (a case) already took it.
   useEffect(() => {
@@ -239,7 +245,19 @@ export default function PortfolioChat({ onOpenProject }) {
   useEffect(() => {
     const dictation = createPortfolioDictation({
       SpeechRecognition: window.SpeechRecognition || window.webkitSpeechRecognition,
-      lang: navigator.language?.startsWith(PORTFOLIO_LANGUAGE) ? navigator.language : PORTFOLIO_LOCALE,
+      lang: locale,
+      requestMicrophone: navigator.mediaDevices?.getUserMedia
+        ? () => navigator.mediaDevices.getUserMedia({ audio: true })
+        : undefined,
+      createFallback: navigator.mediaDevices?.getUserMedia && window.MediaRecorder && (window.AudioContext || window.webkitAudioContext)
+        ? (callbacks) => createLocalDictation({
+          ...callbacks,
+          mediaDevices: navigator.mediaDevices,
+          MediaRecorder: window.MediaRecorder,
+          AudioContext: window.AudioContext || window.webkitAudioContext,
+          speech: browserSpeech,
+        })
+        : undefined,
       onDraft: setDraft,
       onState: setVoiceState,
       onFeedback: setVoiceFeedback,
@@ -249,7 +267,7 @@ export default function PortfolioChat({ onOpenProject }) {
       dictation.cancel({ notify: false })
       dictationRef.current = null
     }
-  }, [])
+  }, [locale])
 
   const toggleVoice = useCallback(() => {
     if (mobileChat) openPanel()
@@ -259,11 +277,11 @@ export default function PortfolioChat({ onOpenProject }) {
     }
     inputRef.current?.blur()
     if (!window.isSecureContext) {
-      setVoiceFeedback('Open the portfolio over HTTPS to use the microphone, or use your keyboard’s dictation.')
+      setVoiceFeedback(t('Open the portfolio over HTTPS to use the microphone, or use your keyboard’s dictation.'))
       return
     }
     dictationRef.current?.start(draft)
-  }, [draft, isListening, mobileChat, openPanel])
+  }, [draft, isListening, mobileChat, openPanel, t])
 
   useEffect(() => {
     const latestMessage = messages.at(-1)
@@ -395,19 +413,7 @@ export default function PortfolioChat({ onOpenProject }) {
 
     dictationRef.current?.cancel()
     const history = serializeChatHistory(messages)
-    const initialFallback = answerPortfolioQuestion(content, { language: PORTFOLIO_LANGUAGE })
-    const latestContextIds = [...history]
-      .reverse()
-      .find((message) => message.projectIds?.some((projectId) => projectId !== 'rappi'))
-      ?.projectIds.filter((projectId) => projectId !== 'rappi') || []
-    const shouldInheritContext =
-      isPortfolioFollowUp(content) &&
-      mentionedProjectIds(content).length === 0 &&
-      !initialFallback.projectIds.includes('rappi') &&
-      latestContextIds.length > 0
-    const fallback = shouldInheritContext
-      ? answerPortfolioQuestion(content, { projectIds: latestContextIds, language: PORTFOLIO_LANGUAGE })
-      : initialFallback
+    const fallback = answerPortfolioConversation(content, history, { language })
     const answerLocally = canAnswerLocally({ history, localAnswer: fallback })
     const userMessage = { id: makeId(), role: 'user', content, createdAt: Date.now() }
 
@@ -428,7 +434,7 @@ export default function PortfolioChat({ onOpenProject }) {
       answer = { ...fallback, source: 'local', reason: 'deterministic' }
     } else {
       try {
-        answer = await requestPortfolioAnswer({ question: content, history })
+        answer = await requestPortfolioAnswer({ question: content, history, language })
       } catch {
         answer = { ...fallback, source: 'local', reason: 'offline' }
       }
@@ -451,7 +457,7 @@ export default function PortfolioChat({ onOpenProject }) {
 
     if (answer.source === 'gemini') {
       setAssistantStatus({
-        label: `Gemini · ${answer.remaining} left today`,
+        label: t('Gemini · {count} left today', { count: answer.remaining }),
         state: 'ready',
       })
     } else if (answer.reason?.includes('daily-limit')) {
@@ -465,7 +471,7 @@ export default function PortfolioChat({ onOpenProject }) {
     }
 
     setIsSending(false)
-  }, [isSending, messages, mobileChat, openPanel])
+  }, [isSending, messages, mobileChat, openPanel, language, t])
 
   const renderComposer = (mode) => {
     const starter = mode === 'starter'
@@ -479,9 +485,7 @@ export default function PortfolioChat({ onOpenProject }) {
             ask(draft)
           }}
         >
-          <label className="visually-hidden" htmlFor="portfolio-question">
-            Ask about Mateo’s work
-          </label>
+          <label className="visually-hidden" htmlFor="portfolio-question"> {t("Ask about Mateo’s work")} </label>
           <textarea
             id="portfolio-question"
             ref={inputRef}
@@ -512,12 +516,12 @@ export default function PortfolioChat({ onOpenProject }) {
             }}
             placeholder={
               starter && showSummary
-                ? 'Keep asking…'
+                ? t('Keep asking…')
                 : starter
-                ? STARTER_COPY.placeholder
+                ? t(STARTER_COPY.placeholder)
                 : mobileChat
-                  ? 'Ask about a case…'
-                  : 'Continue the conversation…'
+                  ? t('Ask about a case…')
+                  : t('Continue the conversation…')
             }
           />
           <div className="portfolio-chat__controls">
@@ -525,7 +529,7 @@ export default function PortfolioChat({ onOpenProject }) {
               className="portfolio-chat__voice"
               type="button"
               onClick={toggleVoice}
-              aria-label={voiceState === 'starting' ? 'Cancel microphone activation' : isListening ? 'Stop voice dictation' : 'Start voice dictation'}
+              aria-label={['starting', 'loading'].includes(voiceState) ? t('Cancel microphone activation') : voiceState === 'transcribing' ? t('Cancel transcription') : isListening ? t('Stop voice dictation') : t('Start voice dictation')}
               aria-pressed={isListening}
               disabled={isSending || voiceState === 'stopping'}
               data-listening={isListening ? 'true' : 'false'}
@@ -537,7 +541,7 @@ export default function PortfolioChat({ onOpenProject }) {
             <button
               className="portfolio-chat__send"
               type="submit"
-              aria-label={isSending ? 'Preparing answer' : 'Send message'}
+              aria-label={isSending ? t('Preparing answer') : t('Send message')}
               disabled={isSending || !draft.trim()}
             >
               <ArrowUp size={19} weight="bold" aria-hidden="true" />
@@ -560,8 +564,8 @@ export default function PortfolioChat({ onOpenProject }) {
         )}
 
         {starter && !showSummary && (
-          <div className="portfolio-chat__suggestions" role="group" aria-label="Suggested questions">
-            {STARTER_SUGGESTIONS.map((suggestion) => (
+          <div className="portfolio-chat__suggestions" role="group" aria-label={t("Suggested questions")}>
+            {localizeContent(language, STARTER_SUGGESTIONS).map((suggestion) => (
               <button
                 type="button"
                 key={suggestion.label}
@@ -579,8 +583,8 @@ export default function PortfolioChat({ onOpenProject }) {
         </p>
         <footer className="portfolio-chat__meta">
           {remainingRequests === null
-            ? STARTER_COPY.meta
-            : `${remainingRequests} Gemini requests left today · local answers always available`}
+            ? t(STARTER_COPY.meta)
+            : t('{count} Gemini requests left today · local answers always available', { count: remainingRequests })}
         </footer>
       </div>
     )
@@ -590,7 +594,7 @@ export default function PortfolioChat({ onOpenProject }) {
     <section className="portfolio-chat container" id="chat"
       ref={sectionRef}
       style={panelOpen && frozenHeight ? { minHeight: frozenHeight } : undefined}
-      aria-label="Mateo portfolio guide"
+      aria-label={t("Mateo portfolio guide")}
     >
       {/* Phones cover the page completely, so only desktop needs the backdrop. */}
       {panelOpen && !mobileChat && <ChatDefaultBackdrop />}
@@ -608,7 +612,7 @@ export default function PortfolioChat({ onOpenProject }) {
             tabIndex={!panelOpen && !sectionInView ? 0 : -1}
           >
             <Sparkle size={16} weight="fill" aria-hidden="true" />
-            <span>{responseCount > 0 ? 'Continue conversation' : 'Ask the portfolio'}</span>
+            <span>{responseCount > 0 ? t('Continue conversation') : t('Ask the portfolio')}</span>
             {responseCount > 0 && <span className="portfolio-chat__launcher-count">{responseCount}</span>}
           </button>
         </>,
@@ -620,32 +624,32 @@ export default function PortfolioChat({ onOpenProject }) {
         id="portfolio-chat-surface"
         data-mode={starterLayout ? 'starter' : 'conversation'}
         data-expanded={panelOpen ? 'true' : 'false'}
-        data-inspect="Local portfolio guide"
+        data-inspect={t("Local portfolio guide")}
         role={panelOpen ? 'dialog' : undefined}
         aria-modal={panelOpen ? true : undefined}
-        aria-label={panelOpen ? 'Portfolio guide' : undefined}
+        aria-label={panelOpen ? t('Portfolio guide') : undefined}
       >
-        <aside className="portfolio-chat__rail" aria-label="Assistant context">
+        <aside className="portfolio-chat__rail" aria-label={t("Assistant context")}>
           <div>
-            <p className="mono">Portfolio intelligence</p>
-            <h2>{isInitial ? 'Editorial desk' : 'Mateo portfolio guide'}</h2>
+            <p className="mono">{t("Portfolio intelligence")}</p>
+            <h2>{isInitial ? t('Editorial desk') : t('Mateo portfolio guide')}</h2>
             <span className="portfolio-chat__rail-state">
-              <i aria-hidden="true" /> {assistantStatus.label}
+              <i aria-hidden="true" /> {t(assistantStatus.label)}
             </span>
           </div>
 
           <div className="portfolio-chat__rail-conversation">
-            <p className="mono">Conversation</p>
+            <p className="mono">{t("Conversation")}</p>
             <strong>
-              {questionCount} {questionCount === 1 ? 'question' : 'questions'} · {responseCount}{' '}
-              {responseCount === 1 ? 'answer' : 'answers'}
+              {questionCount} {questionCount === 1 ? t('question') : t('questions')} · {responseCount}{' '}
+              {responseCount === 1 ? t('answer') : t('answers')}
             </strong>
-            {questionCount === 0 && <span>Start a conversation about Mateo’s work.</span>}
+            {questionCount === 0 && <span>{t("Start a conversation about Mateo’s work.")}</span>}
           </div>
 
-          <nav className="portfolio-chat__rail-topics" aria-label="Topics to explore">
-            <p className="mono">Exploring</p>
-            {STARTER_SUGGESTIONS.map((suggestion, index) => (
+          <nav className="portfolio-chat__rail-topics" aria-label={t("Topics to explore")}>
+            <p className="mono">{t("Exploring")}</p>
+            {localizeContent(language, STARTER_SUGGESTIONS).map((suggestion, index) => (
               <button
                 type="button"
                 key={suggestion.label}
@@ -659,8 +663,8 @@ export default function PortfolioChat({ onOpenProject }) {
           </nav>
 
           <div className="portfolio-chat__rail-note">
-            <p>{STARTER_COPY.railNote}</p>
-            <span className="mono">Ask anything.</span>
+            <p>{t(STARTER_COPY.railNote)}</p>
+            <span className="mono">{t("Ask anything.")}</span>
           </div>
         </aside>
 
@@ -671,17 +675,17 @@ export default function PortfolioChat({ onOpenProject }) {
                 type="button"
                 className="portfolio-chat__mobile-back"
                 onClick={closePanel}
-                aria-label="Back to portfolio"
+                aria-label={t("Back to portfolio")}
               >
                 <CaretLeft size={25} weight="regular" aria-hidden="true" />
               </button>
               <img className="portfolio-chat__mark" src="/favicon.svg" alt="" />
               <span className="portfolio-chat__identity-copy">
                 <strong>
-                  <span className="portfolio-chat__identity-desktop">Mateo portfolio guide</span>
-                  <span className="portfolio-chat__identity-mobile">Portfolio guide</span>
+                  <span className="portfolio-chat__identity-desktop">{t("Mateo portfolio guide")}</span>
+                  <span className="portfolio-chat__identity-mobile">{t("Portfolio guide")}</span>
                 </strong>
-                <small>Answers from this portfolio only</small>
+                <small>{t("Answers from this portfolio only")}</small>
               </span>
             </div>
             <div className="portfolio-chat__header-actions">
@@ -692,8 +696,8 @@ export default function PortfolioChat({ onOpenProject }) {
                 aria-atomic="true"
               >
                 <i aria-hidden="true" />
-                <span className="portfolio-chat__state-label--desktop">{assistantStatus.label}</span>
-                <span className="portfolio-chat__state-label--mobile">{mobileStatusLabel}</span>
+                <span className="portfolio-chat__state-label--desktop">{t(assistantStatus.label)}</span>
+                <span className="portfolio-chat__state-label--mobile">{t(mobileStatusLabel)}</span>
               </span>
               <button
                 type="button"
@@ -701,7 +705,7 @@ export default function PortfolioChat({ onOpenProject }) {
                 onClick={() => (panelOpen ? closePanel() : openPanel())}
                 aria-controls="portfolio-chat-surface"
                 aria-expanded={panelOpen}
-                aria-label={panelOpen ? 'Close expanded view' : 'Expand conversation'}
+                aria-label={panelOpen ? t('Close expanded view') : t('Expand conversation')}
               >
                 {panelOpen ? <X size={18} aria-hidden="true" /> : <ArrowsOutSimple size={18} aria-hidden="true" />}
               </button>
@@ -717,24 +721,24 @@ export default function PortfolioChat({ onOpenProject }) {
                 <PortfolioAiOrb state={orbState} />
                 <p className="portfolio-chat__starter-kicker mono">
                   {awaitingFirstAnswer
-                    ? 'CONNECT · ANALYZE · ANSWER'
+                    ? t('CONNECT · ANALYZE · ANSWER')
                     : showSummary
-                      ? 'CONVERSATION IN PROGRESS'
-                      : STARTER_COPY.kicker}
+                      ? t('CONVERSATION IN PROGRESS')
+                      : t(STARTER_COPY.kicker)}
                 </p>
                 <h2>
                   {awaitingFirstAnswer
-                    ? 'I’m matching your question to the portfolio.'
+                    ? t('I’m matching your question to the portfolio.')
                     : showSummary
-                      ? 'Pick up where you left off.'
-                      : STARTER_COPY.title}
+                      ? t('Pick up where you left off.')
+                      : t(STARTER_COPY.title)}
                 </h2>
                 <p>
                   {awaitingFirstAnswer
-                    ? 'The orb responds while I prepare an answer based on the published cases.'
+                    ? t('The orb responds while I prepare an answer based on the published cases.')
                     : showSummary
-                      ? 'Ask another question or open the full conversation.'
-                      : STARTER_COPY.body}
+                      ? t('Ask another question or open the full conversation.')
+                      : t(STARTER_COPY.body)}
                 </p>
               </Fragment>
             ) : (
@@ -744,7 +748,7 @@ export default function PortfolioChat({ onOpenProject }) {
                 ref={transcriptRef}
                 data-lenis-prevent
                 role="log"
-                aria-label="Conversation with Mateo portfolio guide"
+                aria-label={t("Conversation with Mateo portfolio guide")}
                 aria-live="polite"
                 onScroll={(event) => {
                   const transcript = event.currentTarget
@@ -772,9 +776,9 @@ export default function PortfolioChat({ onOpenProject }) {
                     )}
                     <div className="portfolio-chat__message-content">
                       {message.role === 'assistant' && (
-                        <span className="visually-hidden">Mateo portfolio guide:</span>
+                        <span className="visually-hidden">{t("Mateo portfolio guide:")}</span>
                       )}
-                      {message.role === 'user' && <span className="visually-hidden">You:</span>}
+                      {message.role === 'user' && <span className="visually-hidden">{t("You:")}</span>}
                       {message.role === 'assistant' ? (
                         <PortfolioResponse
                           message={message}
@@ -800,8 +804,8 @@ export default function PortfolioChat({ onOpenProject }) {
                       <Sparkle size={17} weight="fill" />
                     </span>
                     <div className="portfolio-chat__message-content">
-                      <span className="portfolio-chat__message-author">Mateo portfolio guide</span>
-                      <p role="status">Matching your question to the portfolio…</p>
+                      <span className="portfolio-chat__message-author">{t("Mateo portfolio guide")}</span>
+                      <p role="status">{t("Matching your question to the portfolio…")}</p>
                     </div>
                   </article>
                 )}

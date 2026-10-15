@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef, useState } from 'react'
 import { projects } from '../data/projects'
 import { reducedMotion, scrollToTarget } from '../lib/scroll'
@@ -24,6 +25,7 @@ const IDLE_DEMOS = [
 ]
 
 export default function HeroTerminal() {
+  const { t } = useLanguage()
   const [history, setHistory] = useState(INITIAL_LINES)
   const [value, setValue] = useState('')
   const [focused, setFocused] = useState(false)
@@ -81,14 +83,14 @@ export default function HeroTerminal() {
       )
 
       if (project) {
-        setHistory([...base, { kind: 'response', text: 'Opening ' + project.title + '.' }])
+        setHistory([...base, { kind: 'response', text: t('Opening {title}.', { title: t(project.title) }) }])
         window.setTimeout(() => {
           document.querySelector('[data-project="' + project.id + '"]')?.click()
         }, 120)
       } else {
         setHistory([
           ...base,
-          { kind: 'error', text: 'Project not found. Try: ' + projects.map((item) => item.id).join(', ') },
+          { kind: 'error', text: t('Project not found. Try: ') + projects.map((item) => item.id).join(', ') },
         ])
       }
     } else {
@@ -103,29 +105,28 @@ export default function HeroTerminal() {
   return (
     <section
       className="portfolio-terminal"
-      aria-label="Interactive portfolio terminal"
+      aria-label={t("Interactive portfolio terminal")}
       onClick={() => inputRef.current?.focus()}
     >
       <header className="portfolio-terminal__bar">
         <span>mateo@portfolio:~</span>
         <span className="portfolio-terminal__status">
-          <i aria-hidden="true" /> interactive
-        </span>
+          <i aria-hidden="true" /> {t("interactive")} </span>
       </header>
 
       <div className="portfolio-terminal__output" aria-live="polite">
         {history.map((line, index) => (
           <p className={'is-' + line.kind} key={line.text + index}>
-            {line.text}
+            {line.kind === 'command' ? line.text : t(line.text)}
           </p>
         ))}
 
         {!focused && !value && (
           <div className="portfolio-terminal__demo" aria-hidden="true" key={idleIndex}>
             <p>
-              <span>$</span> <code>{demo.command}</code>
+              <span>$</span> <code>{t(demo.command)}</code>
             </p>
-            <small>{demo.response}</small>
+            <small>{t(demo.response)}</small>
           </div>
         )}
       </div>
@@ -137,9 +138,7 @@ export default function HeroTerminal() {
           runCommand(value)
         }}
       >
-        <label className="visually-hidden" htmlFor="portfolio-command">
-          Portfolio command
-        </label>
+        <label className="visually-hidden" htmlFor="portfolio-command"> {t("Portfolio command")} </label>
         <span aria-hidden="true">$</span>
         <input
           id="portfolio-command"
@@ -148,11 +147,11 @@ export default function HeroTerminal() {
           onChange={(event) => setValue(event.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="type a command"
+          placeholder={t("type a command")}
           autoComplete="off"
           spellCheck="false"
         />
-        <button type="submit">Run</button>
+        <button type="submit">{t("Run")}</button>
       </form>
     </section>
   )

@@ -193,7 +193,7 @@ export const projects = [
         body: 'Stakeholder mapping uncovered five disconnected systems. We observed eight corporate treasurers executing monthly FX hedges and interviewed operations staff who reconciled forms. The critical pain was clear: treasurers feared losing a quoted spread while juggling paperwork.',
         bullets: [
           'Competitive analysis across BBVA Net Cash, CitiDirect, Bancolombia, Davivienda, Itaú and Scotiabank.',
-          'None of the benchmarked products automated Colombian cambio forms end to end.',
+          'None of the benchmarked products automated Colombian foreign-exchange forms end to end.',
           'A journey map connected the treasury desk, compliance and settlement moments.',
         ],
       },
@@ -208,7 +208,7 @@ export const projects = [
       },
       {
         title: 'Feature deep dive',
-        body: 'The rate board streamed quotes and exposed the spread breakdown before confirmation. Cambio forms pre-filled 80% of their fields, smart defaults accelerated multi-account settlement and a timeline made approval and audit history explicit.',
+        body: 'The rate board streamed quotes and exposed the spread breakdown before confirmation. Foreign-exchange forms pre-filled 80% of their fields, smart defaults accelerated multi-account settlement and a timeline made approval and audit history explicit.',
       },
       {
         title: 'Iteration design',
@@ -399,7 +399,7 @@ export const projects = [
         title: 'CesionBnk and RADIAN: making the invoice a title',
         body: 'CesionBnk checks each invoice against DIAN, confirms its status as a negotiable title and registers the assignment in RADIAN. The design problem was translation: provider states are precise but opaque, while customers need to know where their money is.',
         bullets: [
-          'Provider and registry states mapped to four customer-facing groups: Por cobrar, Pendientes, Aprobadas and Rechazadas.',
+          'Provider and registry states mapped to four customer-facing groups: Receivables, Pending, Approved and Rejected.',
           'Approved operations split into disbursement, in Kapital and finalized, so the next step is always clear.',
           'Rejections explain the reason, and the analysis window — 24 hours — is stated up front.',
         ],

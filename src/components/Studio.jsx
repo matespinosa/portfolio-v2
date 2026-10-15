@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -15,7 +16,6 @@ function Ruler({ orientation }) {
   return (
     <div className={`ruler ruler-${orientation}`} aria-hidden="true">
       {ticks.map((_, i) => (
-        // eslint-disable-next-line react/no-array-index-key
         <i key={i} className={i % 4 === 0 ? 'tick is-major' : 'tick'}>
           {i % 4 === 0 && <span>{i * 8}</span>}
         </i>
@@ -39,6 +39,7 @@ function TokenTable({ format }) {
 }
 
 function EasingCurve() {
+  const { t } = useLanguage()
   const ref = useRef(null)
 
   useEffect(() => {
@@ -68,16 +69,17 @@ function EasingCurve() {
         />
         <circle className="curve-dot" r="3.5" fill="var(--primary)" />
       </svg>
-      <code className="curve-label">cubic-bezier(0.22, 1, 0.36, 1)</code>
+      <code className="curve-label">{t("cubic-bezier(0.22, 1, 0.36, 1)")}</code>
     </div>
   )
 }
 
 function SpecMock() {
+  const { t } = useLanguage()
   return (
     <div className="spec" aria-hidden="true">
       <div className="spec-target">
-        <span className="spec-btn">Publish</span>
+        <span className="spec-btn">{t("Publish")}</span>
         <span className="spec-rule spec-rule-x">
           <span className="spec-num">20</span>
         </span>
@@ -85,7 +87,7 @@ function SpecMock() {
           <span className="spec-num">12</span>
         </span>
       </div>
-      <p className="spec-caption">Every state, every edge, drawn before it&rsquo;s built.</p>
+      <p className="spec-caption">{t("Every state, every edge, drawn before it’s built.")}</p>
     </div>
   )
 }
@@ -120,6 +122,7 @@ const PANELS = [
 ]
 
 export default function Studio({ format }) {
+  const { t } = useLanguage()
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -140,13 +143,12 @@ export default function Studio({ format }) {
   return (
     <section className="studio container" id="studio" ref={rootRef} aria-labelledby="studio-title">
       <header className="section-head">
-        <h2 className="section-title" id="studio-title">
-          The studio, <em>as a product</em>
+        <h2 className="section-title" id="studio-title"> {t("The studio,")} <em>{t("as a product")}</em>
         </h2>
-        <p className="section-sub">Four disciplines, one operating system</p>
+        <p className="section-sub">{t("Four disciplines, one operating system")}</p>
       </header>
 
-      <div className="bento" data-inspect="Studio / bento">
+      <div className="bento" data-inspect={t("Studio / bento")}>
         {PANELS.map((panel) => (
           <article className={`panel ${panel.className || ''}`} key={panel.id}>
             <header className="panel-tab">
@@ -158,15 +160,14 @@ export default function Studio({ format }) {
 
             <div className="panel-inner">
               <div className="panel-head">
-                <h3>{panel.title}</h3>
-                <p>{panel.copy}</p>
+                <h3>{t(panel.title)}</h3>
+                <p>{t(panel.copy)}</p>
               </div>
 
               {panel.id === 'systems' && (
                 <>
                   <TokenTable format={format} />
-                  <p className="panel-foot">
-                    Live values, read from this page&rsquo;s own <code>:root</code>
+                  <p className="panel-foot"> {t("Live values, read from this page’s own")} <code>{t(":root")}</code>
                   </p>
                 </>
               )}

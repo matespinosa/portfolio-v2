@@ -1,12 +1,17 @@
+import { localizeContent } from '../lib/i18n'
+import { useLanguage } from '../lib/useLanguage'
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { experience, selectedClients } from '../data/projects'
+import { experience as sourceExperience, selectedClients as sourceClients } from '../data/projects'
 import { reducedMotion } from '../lib/scroll'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function Record() {
+  const { t, language } = useLanguage()
+  const experience = localizeContent(language, sourceExperience)
+  const selectedClients = localizeContent(language, sourceClients)
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -27,9 +32,9 @@ export default function Record() {
   }, [])
 
   return (
-    <section className="record container" id="experience" ref={rootRef} aria-label="Clients and experience">
+    <section className="record container" id="experience" ref={rootRef} aria-label={t("Clients and experience")}>
       <div className="record-col">
-        <h2>Selected clients</h2>
+        <h2>{t("Selected clients")}</h2>
         <ul className="record-list">
           {selectedClients.map((client) => (
             <li key={client.org}>
@@ -41,7 +46,7 @@ export default function Record() {
         </ul>
       </div>
       <div className="record-col">
-        <h2>Experience</h2>
+        <h2>{t("Experience")}</h2>
         <ul className="record-list">
           {experience.map((e) => (
             <li key={`${e.org}-${e.span}`}>

@@ -1,3 +1,4 @@
+import { useLanguage } from './lib/useLanguage'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Preloader from './components/Preloader'
@@ -19,6 +20,7 @@ import Inspector from './components/Inspector'
 import Grain from './components/Grain'
 import { initSmoothScroll, reducedMotion, scrollToTarget } from './lib/scroll'
 import { FORMATS, applyFormat } from './lib/tokens'
+import { projects } from './data/projects'
 
 const SECTIONS = [
   { id: '#top', label: 'Hero' },
@@ -32,6 +34,7 @@ const SECTIONS = [
 ]
 
 export default function App() {
+  const { t, language } = useLanguage()
   const [ready, setReady] = useState(false)
   const [activeCase, setActiveCase] = useState(null)
   const [tools, setTools] = useState({ draw: false, grid: false, inspect: false })
@@ -47,6 +50,11 @@ export default function App() {
     document.fonts?.ready.then(refresh)
     return () => window.removeEventListener('load', refresh)
   }, [])
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => ScrollTrigger.refresh())
+    return () => window.cancelAnimationFrame(frame)
+  }, [language])
 
   const toggle = useCallback((id) => {
     setTools((t) => ({ ...t, [id]: !t[id] }))
@@ -92,8 +100,8 @@ export default function App() {
         run: cycleFormat,
       },
       { id: 'profile', group: 'profile', label: 'Read Mateo’s background', run: () => scrollToTarget('#practice') },
-    ],
-    [toggle, cycleFormat]
+    ].map((command) => ({ ...command, group: t(command.group), label: t(command.label) })),
+    [toggle, cycleFormat, t]
   )
 
   // Keyboard layer. Single-letter shortcuts stay out of the way while typing.
@@ -117,25 +125,23 @@ export default function App() {
 
   return (
     <>
-      <a className="skip-link" href="#work">
-        Skip to work
-      </a>
+      <a className="skip-link" href="#work"> {t("Skip to work")} </a>
       <Preloader onDone={() => setReady(true)} />
       <Nav ready={ready} onCommand={() => setPaletteOpen(true)} />
 
       <main>
-        <Hero ready={ready} />
-        <PortfolioChat onOpenProject={setActiveCase} />
+        <Hero key={`hero-${language}`} ready={ready} />
+        <PortfolioChat key={`chat-${language}`} onOpenProject={setActiveCase} />
         <Studio format={format} />
         <Work onOpen={setActiveCase} />
         <Globe />
-        <About />
+        <About key={`about-${language}`} />
         <Record />
       </main>
       <Footer />
 
       <CaseOverlay
-        project={activeCase}
+        project={projects.find((project) => project.id === activeCase?.id) || null}
         onNavigate={setActiveCase}
         onClose={() => setActiveCase(null)}
       />

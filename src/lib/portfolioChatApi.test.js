@@ -32,3 +32,19 @@ test('posts a question and history to the portfolio endpoint', async () => {
   assert.equal(answer.source, 'gemini')
 })
 
+
+test('sends the selected language even when the question uses the other language', async () => {
+  for (const language of ['es', 'en']) {
+    const result = await requestPortfolioAnswer({
+      language,
+      question: language === 'es' ? 'What does Mateo do?' : '¿Qué hace Mateo?',
+      history: [],
+      fetchImpl: async (_url, options) => {
+        assert.equal(JSON.parse(options.body).language, language)
+        return Response.json({ text: 'Mateo', language })
+      },
+    })
+    assert.equal(result.language, language)
+  }
+  await assert.rejects(requestPortfolioAnswer({ language: 'es', question: 'Hola', history: [], fetchImpl: async () => Response.json({ text: 'Hello', language: 'en' }) }))
+})

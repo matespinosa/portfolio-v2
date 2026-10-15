@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/useLanguage'
 import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { reducedMotion } from '../lib/scroll'
@@ -13,6 +14,7 @@ const COLLABORATORS = [
 ]
 
 export default function FigmaCursors() {
+  const { t } = useLanguage()
   const rootRef = useRef(null)
 
   useLayoutEffect(() => {
@@ -65,7 +67,7 @@ export default function FigmaCursors() {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="fcursor-chip">{c.label}</span>
+          <span className="fcursor-chip">{t(c.label)}</span>
         </span>
       ))}
     </div>
