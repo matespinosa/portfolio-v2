@@ -224,7 +224,7 @@ export function classifyPortfolioPresentation({ question, answer }) {
   if (answer?.kind === 'profile-summary') return { kind: 'profile-overview', topic: 'profile' }
   if (answer?.confidence === 'low') return { kind: 'suggestions', topic: 'fallback' }
 
-  if (answer?.kind === 'current-role' || (projectIds.length === 1 && projectIds[0] === 'rappi')) return { kind: 'profile-facts', topic: 'current' }
+  if (answer?.kind === 'current-role') return { kind: 'profile-facts', topic: 'current' }
 
   const profile = projectIds.length ? undefined : profileTopic(normalized)
   if (profile) return { kind: 'profile-facts', topic: profile }
@@ -242,7 +242,7 @@ export function classifyPortfolioPresentation({ question, answer }) {
   }
 
   if (projectIds.length > 1) return { kind: 'project-carousel', topic: 'projects' }
-  if (projectIds.length === 1 && projectIds[0] !== 'rappi') {
+  if (projectIds.length === 1) {
     return { kind: 'project-spotlight', topic: 'project' }
   }
 

@@ -24,9 +24,9 @@ test('the route scopes the dictated Rappi question locally in either selected la
     assert.equal(payload.source, 'local')
     assert.equal(payload.reason, 'deterministic')
     assert.equal(payload.language, language)
-    assert.equal(payload.kind, 'current-role')
+    assert.equal(payload.kind, undefined)
     assert.deepEqual(payload.projectIds, ['rappi'])
-    assert.match(payload.text, language === 'es' ? /^En Rappi/ : /^At Rappi/)
+    assert.match(payload.text, /Rappi Aliados/)
     assert.doesNotMatch(payload.text, /MiBanco|Modyo|Credicorp/)
   }
 })
@@ -39,19 +39,20 @@ test('Gemini receives Rappi scope without unrelated case metrics for a follow-up
   const context = JSON.parse(prepared.context)
   assert.equal(shouldUseGemini(prepared), true)
   assert.deepEqual(prepared.projectIds, ['rappi'])
-  assert.deepEqual(context.projects, [])
+  assert.deepEqual(context.projects.map(({ id }) => id), ['rappi'])
   assert.deepEqual(context.questionScope.entityIds, ['rappi'])
   assert.equal(context.questionScope.portfolioWide, false)
-  assert.equal(context.questionScope.currentRoleHasPublishedMetrics, false)
-  assert.equal(context.questionScope.currentRoleHasPublishedCase, false)
-  assert.match(prepared.localAnswer.text, /aún no publica métricas/)
+  assert.equal(context.questionScope.currentRoleHasPublishedMetrics, true)
+  assert.equal(context.questionScope.currentRoleHasPublishedCase, true)
+  assert.match(prepared.localAnswer.text, /25%/)
+  assert.equal(context.projects[0].metrics[3].value, '70%')
 })
 
 test('mixed comparisons include only the requested case and the current-role scope', () => {
   const prepared = preparePortfolioRequest('Compare metrics for rapi and MiBanco', [])
   const context = JSON.parse(prepared.context)
-  assert.deepEqual(prepared.projectIds, ['mibanco', 'rappi'])
-  assert.deepEqual(context.projects.map(({ id }) => id), ['mibanco'])
+  assert.deepEqual(prepared.projectIds, ['rappi', 'mibanco'])
+  assert.deepEqual(context.projects.map(({ id }) => id), ['rappi', 'mibanco'])
   assert.equal(context.questionScope.portfolioWide, false)
 })
 
@@ -240,7 +241,7 @@ test('the Vercel route answers what Mateo does locally with the full portfolio',
   assert.equal(payload.source, 'local')
   assert.equal(payload.language, 'en')
   assert.equal(payload.kind, 'profile-summary')
-  assert.equal(payload.projectIds.length, 5)
+  assert.equal(payload.projectIds.length, 6)
   assert.match(payload.text, /product designer/i)
 })
 
@@ -250,7 +251,7 @@ test('gives Gemini the full portfolio for summary questions asked mid-conversati
   const openFollowUp = preparePortfolioRequest('¿Y por qué eligieron ese enfoque?', history)
 
   assert.equal(shouldUseGemini(summary), false)
-  assert.equal(JSON.parse(summary.context).projects.length, 5)
+  assert.equal(JSON.parse(summary.context).projects.length, 6)
   assert.equal(shouldUseGemini(openFollowUp), true)
 })
 

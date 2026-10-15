@@ -1,4 +1,6 @@
 export const PROJECT_ALIASES = {
+  // Includes common speech transcriptions of the company name.
+  rappi: ['rappi', 'rapi', 'rappy', 'rapy', 'raffi', 'raffy', 'rappi aliados', 'merchants', 'mi tienda', 'portal partners', 'portal aliados'],
   modyo: ['modyo', 'modyo platform', 'dxp', 'low code', 'low-code', 'modio'],
   mibanco: ['mibanco', 'mi banco', 'cdt', 'cdts'],
   credicorp: ['credicorp', 'credicorp capital', 'corporate fx'],
@@ -8,8 +10,6 @@ export const PROJECT_ALIASES = {
 
 const ENTITY_ALIASES = {
   ...PROJECT_ALIASES,
-  // Common transcriptions of the proper name, including the local speech engine.
-  rappi: ['rappi', 'rapi', 'rappy', 'rapy', 'raffi', 'raffy', 'merchants', 'mi tienda', 'portal partners', 'portal aliados'],
 }
 const NAMES = Object.keys(ENTITY_ALIASES)
 const ORDINARY_WORDS = new Set(['modo', 'mando', 'capital'])

@@ -78,10 +78,10 @@ test('answers AI-practice questions without treating AI as part of another word'
   assert.match(answer.text, /Cursor, Codex and Claude/)
 })
 
-test('routes design-system questions to the documented Modyo case', () => {
+test('routes design-system questions to the documented Rappi and Modyo cases', () => {
   const answer = answerPortfolioQuestion('What design systems has Mateo worked on?')
 
-  assert.deepEqual(answer.projectIds, ['modyo'])
+  assert.deepEqual(answer.projectIds, ['rappi', 'modyo'])
   assert.match(answer.text, /shared product foundations/)
 })
 
@@ -143,7 +143,7 @@ test('says undocumented organizations are not published cases instead of guessin
   const answer = answerPortfolioQuestion('¿Ha trabajado con Banca Mifel?')
 
   assert.match(answer.text, /no está documentado/)
-  assert.equal(answer.projectIds.length, 5)
+  assert.equal(answer.projectIds.length, 6)
   assert.match(answerPortfolioQuestion('Did he work with Banca Mifel?').text, /not documented/)
 })
 
@@ -162,7 +162,7 @@ test('answers questions about Rappi from the current role', () => {
 
     assert.equal(answer.confidence, 'high')
     assert.deepEqual(answer.projectIds, ['rappi'])
-    assert.match(answer.text, /Comercios/)
+    assert.match(answer.text, /Rappi Aliados/)
   }
 })
 
@@ -170,19 +170,19 @@ test('compares all cases for project-less impact, process and role questions', (
   const impact = answerPortfolioQuestion('¿Qué impacto tuvo su trabajo?')
 
   assert.equal(impact.confidence, 'high')
-  assert.equal(impact.projectIds.length, 5)
+  assert.equal(impact.projectIds.length, 6)
   assert.match(impact.text, /resultados documentados/)
 })
 
 test('answers the dictated question about Rappi specifically in the selected language', () => {
   for (const language of ['es', 'en']) {
     const answer = answerPortfolioQuestion('Que Que hace Mateo en rapi', { language })
-    assert.equal(answer.kind, 'current-role')
+    assert.equal(answer.kind, undefined)
     assert.equal(answer.standalone, true)
     assert.equal(answer.language, language)
     assert.deepEqual(answer.projectIds, ['rappi'])
-    assert.match(answer.text, language === 'es' ? /En Rappi, Mateo trabaja/ : /At Rappi, Mateo works/)
-    assert.match(answer.text, /Mi Tienda/)
+    assert.match(answer.text, /Rappi Aliados/)
+    assert.match(answer.text, /Portal Partners/)
     assert.doesNotMatch(answer.text, /MiBanco|Modyo|Credicorp|six years|seis años|US\$/)
   }
 })
@@ -196,17 +196,21 @@ test('a named company takes priority over biography and profile keywords', () =>
   assert.deepEqual(answerPortfolioQuestion('What is his frontend experience at MiBanco?').projectIds, ['mibanco'])
 })
 
-test('does not invent Rappi metrics, processes or teams and preserves mixed-company scope', () => {
+test('uses reported Rappi results and preserves mixed-company scope', () => {
   for (const language of ['es', 'en']) {
     const answer = answerPortfolioQuestion('¿Cuáles fueron los resultados de rapi?', { language })
-    assert.match(answer.text, language === 'es' ? /aún no publica métricas/ : /does not yet publish metrics/)
+    assert.match(answer.text, /25%/)
+    assert.match(answer.text, /45%/)
+    assert.match(answer.text, /70%/)
+    assert.match(answer.text, /80%/)
     assert.deepEqual(answer.projectIds, ['rappi'])
     assert.doesNotMatch(answer.text, /48%|158%|US\$/)
 
     const comparison = answerPortfolioQuestion('Compare metrics for Rappi and MiBanco', { language })
-    assert.deepEqual(comparison.projectIds, ['mibanco', 'rappi'])
+    assert.deepEqual(comparison.projectIds, ['rappi', 'mibanco'])
     assert.match(comparison.text, /MiBanco/)
-    assert.match(comparison.text, language === 'es' ? /aún no publica métricas/ : /does not yet publish metrics/)
+    assert.match(comparison.text, /25%/)
+    assert.match(comparison.text, /45%/)
   }
 })
 
@@ -267,7 +271,7 @@ test('summarizes the whole portfolio for open questions about what Mateo does', 
       assert.equal(answer.language, language, question)
       assert.equal(answer.confidence, 'high', question)
       assert.equal(answer.standalone, true, question)
-      assert.deepEqual(answer.projectIds, ['modyo', 'mibanco', 'credicorp', 'dando', 'kapital'], question)
+      assert.deepEqual(answer.projectIds, ['rappi', 'modyo', 'mibanco', 'credicorp', 'dando', 'kapital'], question)
       assert.match(answer.text, /Rappi/, question)
     }
   }

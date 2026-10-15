@@ -5311,6 +5311,13 @@ body.has-custom-cursor .world-canvas {
   background: var(--surface-sunken);
 }
 
+.case-lightbox-figure img[data-framed] {
+  justify-self: center;
+  width: auto;
+  height: auto;
+  background: transparent;
+}
+
 .case-lightbox-figure figcaption {
   color: oklch(0.93 0.015 80);
   font-size: 0.7rem;
@@ -5642,4 +5649,107 @@ body.has-custom-cursor .world-canvas {
   .portfolio-response__evidence-followup {
     display: none;
   }
+}
+
+/* Rappi case: the existing portfolio typography frames the real product screens. */
+.case-metrics-source {
+  grid-column: 1 / -1;
+  margin-top: calc(var(--space-md) * -1);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.case-unification {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.5fr);
+  align-items: center;
+  gap: clamp(1.25rem, 4vw, 4rem);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-block: 1px solid var(--line-strong);
+}
+
+.case-unification__before {
+  display: grid;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+}
+
+.case-unification__arrow { color: var(--muted); font-size: 2rem; }
+.case-unification__after { display: grid; gap: 0.85rem; }
+.case-unification__after > strong {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+}
+.case-unification__after ul { display: flex; flex-wrap: wrap; gap: 0.45rem 1rem; }
+.case-unification__after p { color: var(--muted); font-size: var(--text-sm); }
+
+.case-story { grid-column: 1 / -1; min-width: 0; }
+.case-story__source { color: var(--muted); font-size: var(--text-sm); }
+.case-story-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: var(--space-lg) var(--space-xl);
+  padding-block: clamp(2.5rem, 6vw, 5rem);
+  border-bottom: 1px solid var(--line-strong);
+}
+.case-story-section__copy { display: grid; gap: 1rem; }
+.case-story-section__copy h3 {
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem);
+  font-weight: 500;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.case-story-section__copy > p { max-width: 58ch; color: var(--muted); }
+.case-story-section__screens {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(1rem, 3vw, 2rem);
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-lg);
+}
+.case-story-media[data-device="tablet"] { grid-column: 1 / -1; }
+.case-story-media[data-device="phone"]:only-child,
+.case-story-media[data-device="phone"]:last-child:nth-child(even) {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: 21rem;
+  justify-self: center;
+}
+.case-story-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.case-story-media figcaption { font-family: var(--font-body); font-size: var(--text-sm); line-height: 1.45; }
+.case-workflow { display: grid; gap: 0; }
+.case-workflow li { display: grid; gap: 0.4rem; padding-block: 1.1rem; border-top: 1px solid var(--line); }
+.case-workflow strong { font-size: var(--text-lg); font-weight: 500; }
+.case-workflow p { color: var(--muted); font-size: var(--text-sm); }
+
+@media (min-width: 901px) {
+  .case-story-section__copy { position: sticky; top: 2rem; }
+}
+@media (max-width: 900px) {
+  .case-story-section { grid-template-columns: minmax(0, 1fr); }
+  .case-story-section__copy h3 { max-width: 24ch; }
+  .case-story-section__copy > p { max-width: 65ch; }
+}
+@media (max-width: 560px) {
+  .case-unification { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-inline: 0; }
+  .case-unification__before { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: 1.1rem; }
+  .case-unification__arrow { transform: rotate(90deg); justify-self: start; }
 }

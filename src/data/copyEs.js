@@ -68,6 +68,12 @@ export const SECTION_LABELS_ES = {
 }
 
 export const PROCESS_COPY_ES = {
+  rappi: [
+    { title: 'Unificación', body: 'Reunió Portal Partners y Portal Aliados en una sola experiencia para operar el restaurante.' },
+    { title: 'Sistema de diseño', body: 'Conectó componentes con la identidad de Rappi y un repositorio compartido en GitHub.' },
+    { title: 'Prototipado en código', body: 'Construyó flujos funcionales con Claude Code y Cursor para móvil y tablet.' },
+    { title: 'Escenarios y entrega', body: 'Hizo visibles los casos borde para que desarrollo y QA pudieran revisar cada estado.' },
+  ],
   modyo: [
     { title: 'Investigación', body: 'Diez entrevistas revelaron fricción en la arquitectura, la terminología y la documentación.' },
     { title: 'Fundamentos', body: 'Definió una paleta accesible, tipografía modular y más de 60 componentes compartidos.' },
@@ -124,10 +130,11 @@ export const EXPERIENCE_SPAN_ES = {
 
 export const CURRENT_ROLE_ES = {
   role: 'diseñador de producto · Comercios',
-  scope: 'Restaurantes y Mi Tienda, incluida la unificación de Portal Partners y Portal Aliados con Rappi DS.',
+  scope: 'Rappi Aliados: unificación de Portal Partners y Portal Aliados en móvil y tablet, con usuarios, roles y Rappi DS compartidos.',
 }
 
 export const SHORT_TITLES = {
+  rappi: 'Rappi Aliados',
   modyo: 'Modyo Platform',
   mibanco: 'MiBanco',
   credicorp: 'Credicorp Capital',
@@ -136,6 +143,7 @@ export const SHORT_TITLES = {
 }
 
 export const PROCESS_TITLES_EN = {
+  rappi: ['platform unification', 'shared design system', 'code prototyping', 'edge cases and handoff'],
   modyo: ['research', 'foundations', 'prototyping', 'implementation'],
   mibanco: ['discovery', 'design system', 'experience', 'validation'],
   credicorp: ['discovery', 'flow architecture', 'prototyping', 'validation'],

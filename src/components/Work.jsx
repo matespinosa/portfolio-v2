@@ -56,7 +56,7 @@ export default function Work({ onOpen }) {
       <header className="section-head">
         <h2 className="section-title" id="work-title"> {t("Selected")} <em>{t("fieldwork")}</em>
         </h2>
-        <p className="section-sub">{t("Five products, real responsibilities")}</p>
+        <p className="section-sub">{t('{count} products, real responsibilities', { count: projects.length })}</p>
       </header>
 
       <ul className="work-grid" data-inspect={t("Work / grid")}>

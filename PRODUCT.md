@@ -22,7 +22,7 @@ A code-aware product designer who makes dense financial and operational systems 
 
 ## Conversion & proof
 
-- Primary CTA: “Selected work” → five real case studies.
+- Primary CTA: “Selected work” → six real case studies, including Rappi Aliados across mobile and tablet.
 - Secondary CTA: “About Mateo” → professional background and capabilities.
 - The line a visitor remembers: “Interfaces built like instruments.”
 - Belief ladder: (1) Mateo has precise product judgment → (2) he understands complex financial workflows → (3) he can connect design to frontend → (4) he uses AI to improve execution without outsourcing judgment.

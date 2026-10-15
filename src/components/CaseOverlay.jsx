@@ -6,9 +6,15 @@ import gsap from 'gsap'
 import { projects as sourceProjects } from '../data/projects'
 import { lockScroll, reducedMotion } from '../lib/scroll'
 
+function imageFrameStyle(image) {
+  if (!image.frameRadius) return undefined
+  return { borderRadius: `${100 * image.frameRadius / image.width}% / ${100 * image.frameRadius / image.height}%` }
+}
+
 export default function CaseOverlay({ project, onNavigate, onClose }) {
   const { t, language } = useLanguage()
   const projects = localizeContent(language, sourceProjects)
+  const sourceProject = sourceProjects.find((item) => item.id === project?.id) || project
   const [current, setCurrent] = useState(null)
   const rootRef = useRef(null)
   const scrollRef = useRef(null)
@@ -29,10 +35,10 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
   useLayoutEffect(() => {
     if (project && !current) {
       lastFocused.current = document.activeElement
-      setCurrent(localizeContent(language, project))
+      setCurrent(localizeContent(language, sourceProject))
     } else if (project && current && project.id !== current.id) {
       const swap = () => {
-        setCurrent(localizeContent(language, project))
+        setCurrent(localizeContent(language, sourceProject))
         scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
       }
       if (reducedMotion()) {
@@ -49,7 +55,7 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
         })
       }
     } else if (project && current && project.id === current.id) {
-      setCurrent(localizeContent(language, project))
+      setCurrent(localizeContent(language, sourceProject))
     } else if (!project && current && !closing.current) {
       closing.current = true
       const finish = () => {
@@ -162,11 +168,12 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
 
   const next = projects[(projects.findIndex((p) => p.id === current.id) + 1) % projects.length]
   // Year only when it is a date; some projects use the client name there.
-  const heroYear = current.year.match(/\d{4}(?:\s*[–-]\s*\d{4})?/)?.[0]
+  const heroYear = current.year.match(/\d{4}(?:\s*[–-]\s*(?:\d{4}|present|hoy))?/)?.[0]
 
   return createPortal(
     <div
       className="case-overlay"
+      data-project={current.id}
       ref={rootRef}
       role="dialog"
       aria-modal="true"
@@ -229,7 +236,7 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
           <div className="case-text">
             <p>{current.intro}</p>
             {current.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-            {current.sections.map((section) => (
+            {current.layout !== 'story' && current.sections.map((section) => (
               <section className="case-section" key={section.title}>
                 <h3>{section.title}</h3>
                 <p>{section.body}</p>
@@ -256,7 +263,63 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
           ) : (
             <p className="case-metrics-note">{current.metricsNote}</p>
           )}
-          <section className="case-gallery" aria-label={t('Project gallery: {title}', { title: current.title })}>
+          {current.metricsSource && <p className="case-metrics-source">{current.metricsSource}</p>}
+          {current.unification && (
+            <section className="case-unification" aria-label={t('Two portals, one workspace')}>
+              <div className="case-unification__before">
+                {current.unification.before.map((portal) => <span key={portal}>{portal}</span>)}
+              </div>
+              <span className="case-unification__arrow" aria-hidden="true">→</span>
+              <div className="case-unification__after">
+                <strong>{current.unification.after}</strong>
+                <ul>{current.unification.modules.map((module) => <li key={module}>{module}</li>)}</ul>
+                <p>{current.unification.benefit}</p>
+              </div>
+            </section>
+          )}
+          {current.layout === 'story' && (
+            <div className="case-story">
+              <p className="case-story__source">{current.screensNote}</p>
+              {current.sections.map((section) => (
+                <section className="case-story-section" data-has-media={section.imageIds?.length > 0} key={section.title}>
+                  <div className="case-story-section__copy">
+                    <h3>{section.title}</h3>
+                    <p>{section.body}</p>
+                    {section.bullets?.length > 0 && (
+                      <ul className="case-list">
+                        {section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                  {section.imageIds?.length > 0 && (
+                    <div className="case-story-section__screens">
+                      {section.imageIds.map((id) => {
+                        const index = current.gallery.findIndex((image) => image.id === id)
+                        const image = current.gallery[index]
+                        if (!image) return null
+                        return (
+                          <figure className="case-gallery-item case-story-media" data-device={image.device} key={image.id}>
+                            <button type="button" onClick={(event) => openViewer(index, event.currentTarget)}
+                              aria-label={t('View full image: {label}', { label: image.label })} data-cursor="view">
+                              <img src={image.src} alt={image.alt} width={image.width} height={image.height}
+                                style={imageFrameStyle(image)} data-framed={image.frameRadius ? true : undefined} loading="lazy" />
+                            </button>
+                            <figcaption>{image.label}</figcaption>
+                          </figure>
+                        )
+                      })}
+                    </div>
+                  )}
+                  {section.workflow && (
+                    <ol className="case-workflow">
+                      {section.workflow.map((step) => <li key={step.title}><strong>{step.title}</strong><p>{step.body}</p></li>)}
+                    </ol>
+                  )}
+                </section>
+              ))}
+            </div>
+          )}
+          {current.layout !== 'story' && <section className="case-gallery" aria-label={t('Project gallery: {title}', { title: current.title })}>
             {current.gallery.map((image, index) => (
               <figure className="case-gallery-item" key={image.src}>
                 <button
@@ -270,7 +333,7 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
                 <figcaption className="mono">{image.label}</figcaption>
               </figure>
             ))}
-          </section>
+          </section>}
           <section className="case-outcome-panel">
             <h3>{current.outcomesLabel || t('Selected outcomes')}</h3>
             <ul className="case-outcomes">
@@ -310,7 +373,9 @@ export default function CaseOverlay({ project, onNavigate, onClose }) {
               <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.4" />
             </svg> {t("Close")} </button>
           <figure className="case-lightbox-figure" onClick={(e) => e.stopPropagation()}>
-            <img src={current.gallery[viewerIndex].src} alt={current.gallery[viewerIndex].alt} />
+            <img src={current.gallery[viewerIndex].src} alt={current.gallery[viewerIndex].alt}
+              style={imageFrameStyle(current.gallery[viewerIndex])}
+              data-framed={current.gallery[viewerIndex].frameRadius ? true : undefined} />
             <figcaption className="mono">
               {current.gallery[viewerIndex].label} · {viewerIndex + 1}/{current.gallery.length}
             </figcaption>

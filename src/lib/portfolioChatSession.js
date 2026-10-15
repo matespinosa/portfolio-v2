@@ -85,7 +85,7 @@ export function clearChatSession(storage = defaultStorage(), language = PORTFOLI
 
 function topicsOf(answer) {
   if (answer.presentation?.kind === 'profile-overview') return ['Profile']
-  const labels = (answer.projectIds || []).map((id) => (id === 'rappi' ? 'Rappi' : SHORT_TITLES[id])).filter(Boolean)
+  const labels = (answer.projectIds || []).map((id) => SHORT_TITLES[id]).filter(Boolean)
   if (answer.presentation?.kind === 'profile-facts') {
     const label = PROFILE_TOPIC_LABELS[answer.presentation.topic]
     if (label) labels.push(label)

@@ -29,6 +29,7 @@ import {
 } from '../data/copyEs'
 
 const PROJECT_COPY_ES = {
+  rappi: { title: 'Rappi Aliados', category: 'Operación de restaurantes · Móvil y tablet', summary: 'Unificó Portal Partners y Portal Aliados con órdenes, datos, financiero, menú y gestión de equipos en una sola experiencia.' },
   modyo: {
     title: 'Modyo Platform',
     category: 'DXP · sistema de diseño',
@@ -57,6 +58,7 @@ const PROJECT_COPY_ES = {
 }
 
 const PRIMARY_METRICS = {
+  rappi: [0, 1],
   modyo: [0, 1],
   mibanco: [0, 3],
   credicorp: [0, 1],
@@ -131,16 +133,16 @@ function projectCopy(project, language) {
   return {
     title: PROJECT_COPY_ES[project.id]?.title || project.title,
     category: project.category,
-    summary: project.intro,
+    summary: project.summary || project.intro,
   }
 }
 
 function metricLabel(metric, language) {
-  return language === 'es' ? METRIC_LABELS_ES[metric.label] || metric.label : metric.label
+  return language === 'es' ? METRIC_LABELS_ES[metric.label] || translate(language, metric.label) : metric.label
 }
 
 function metricDetail(metric, language) {
-  return language === 'es' ? METRIC_DETAILS_ES[metric.detail] || metric.detail : metric.detail
+  return language === 'es' ? METRIC_DETAILS_ES[metric.detail] || translate(language, metric.detail) : metric.detail
 }
 
 function compactSentence(value, maxLength = 150) {
@@ -409,11 +411,11 @@ function ProcessSteps({ projectList, language, onOpenProject, onAsk, isSending }
   const activeProject = projectList.find((project) => project.id === activeProjectId) || projectList[0]
   if (!activeProject) return null
 
-  const steps = language === 'es'
+  const steps = activeProject.processSteps || (language === 'es'
     ? PROCESS_COPY_ES[activeProject.id]
     : activeProject.sections
       .filter((section) => section.title !== 'My role')
-      .slice(0, 4)
+      .slice(0, 4))
 
   return (
     <>
@@ -518,7 +520,7 @@ function RoleBrief({ projectList, language, onOpenProject, onAsk, isSending }) {
   )
 }
 
-function ProfileFacts({ topic, language, showCurrentRoleLimit = false }) {
+function ProfileFacts({ topic, language }) {
   if (topic === 'experience') {
     return (
       <ol className="portfolio-response__timeline">
@@ -582,13 +584,6 @@ function ProfileFacts({ topic, language, showCurrentRoleLimit = false }) {
       <ul>
         {content.facts.map((fact) => <li key={fact}>{fact}</li>)}
       </ul>
-      {showCurrentRoleLimit && topic === 'current' && (
-        <p className="portfolio-response__summary">
-          {language === 'es'
-            ? 'La información publicada de Rappi cubre su rol actual. Aún no hay un caso detallado ni resultados medidos.'
-            : 'The published Rappi information covers his current role. A detailed case and measured outcomes are not yet available.'}
-        </p>
-      )}
     </section>
   )
 }
@@ -784,9 +779,6 @@ export default function PortfolioResponse({ message, onAsk, onOpenProject, isSen
         </div>
       )}
 
-      {message.projectIds?.includes('rappi') && projectList.length > 0 && (
-        <ProfileFacts topic="current" language={language} showCurrentRoleLimit />
-      )}
     </div>
   )
 }

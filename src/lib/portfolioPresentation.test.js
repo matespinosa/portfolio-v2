@@ -59,7 +59,7 @@ test('uses profile facts for frontend and current-role questions', () => {
       question: '¿Cuál es su rol actual en Rappi?',
       answer: answer(['rappi']),
     }).topic,
-    'current',
+    'role',
   )
   assert.equal(
     classifyPortfolioPresentation({
@@ -115,10 +115,9 @@ test('uses the profile overview for portfolio-wide summaries', () => {
   )
 })
 
-test('shows only the current role for Rappi, including transcription errors and metric follow-ups', () => {
-  for (const question of ['Que Que hace Mateo en rapi', '¿Y qué resultados tuvo?', 'How was the design process?']) {
-    assert.deepEqual(classifyPortfolioPresentation({ question, answer: { ...answer(['rappi']), kind: 'current-role' } }),
-      { kind: 'profile-facts', topic: 'current' })
+test('uses the published Rappi case for overview, metrics and process follow-ups', () => {
+  for (const [question, kind] of [['Que Que hace Mateo en rapi', 'project-spotlight'], ['¿Y qué resultados tuvo?', 'metric-grid'], ['How was the design process?', 'process-steps']]) {
+    assert.equal(classifyPortfolioPresentation({ question, answer: answer(['rappi']) }).kind, kind)
   }
 })
 

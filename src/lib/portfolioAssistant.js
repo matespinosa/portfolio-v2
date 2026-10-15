@@ -1,11 +1,10 @@
 import { PROJECT_ALIASES, normalizeQuestion as normalize, resolvePortfolioEntities } from './portfolioEntities.js'
 export { mentionedProjectIds } from './portfolioEntities.js'
-import { translate } from './i18n.js'
+import { localizeContent, translate } from './i18n.js'
 import Fuse from 'fuse.js'
 import { profile } from '../data/profile.js'
 import { experience, projects, selectedClients } from '../data/projects.js'
 import {
-  CURRENT_ROLE_ES,
   EXPERIENCE_ES,
   EXPERIENCE_SPAN_ES,
   METRIC_DETAILS_ES,
@@ -91,6 +90,7 @@ const SUMMARY_PHRASES = [
 
 // Domains that map to several documented cases; checked before the generic experience answer.
 const DOMAIN_ROUTES = [
+  { phrases: ['restaurant operations', 'merchant operations', 'restaurantes', 'operacion de comercios'], ids: ['rappi'] },
   { phrases: ['b2b', 'corporate', 'corporativo', 'corporativa', 'corporativos', 'enterprise', 'saas'], ids: ['credicorp', 'kapital', 'modyo'] },
   { phrases: ['onboarding', 'kyc', 'apertura de cuenta', 'account opening'], ids: ['mibanco', 'dando'] },
   { phrases: ['backoffice', 'back office', 'herramientas internas', 'internal tools'], ids: ['credicorp', 'dando'] },
@@ -111,9 +111,10 @@ const YES_NO_PHRASES = [
   'have experience',
 ]
 
-const SUMMARY_DOMAIN_ORDER = ['mibanco', 'credicorp', 'dando', 'kapital', 'modyo']
+const SUMMARY_DOMAIN_ORDER = ['rappi', 'mibanco', 'credicorp', 'dando', 'kapital', 'modyo']
 const SUMMARY_DOMAINS = {
   es: {
+    rappi: 'operación de restaurantes en móvil y tablet',
     mibanco: 'banca digital',
     credicorp: 'divisas corporativas',
     dando: 'crédito digital',
@@ -121,6 +122,7 @@ const SUMMARY_DOMAINS = {
     modyo: 'una plataforma de experiencia digital usada por bancos',
   },
   en: {
+    rappi: 'restaurant operations on mobile and tablet',
     mibanco: 'digital banking',
     credicorp: 'corporate FX',
     dando: 'digital lending',
@@ -128,9 +130,10 @@ const SUMMARY_DOMAINS = {
     modyo: 'a digital experience platform used by banks',
   },
 }
-const SUMMARY_HIGHLIGHT_IDS = ['credicorp', 'mibanco', 'dando']
+const SUMMARY_HIGHLIGHT_IDS = ['rappi', 'credicorp', 'mibanco']
 
 const PROJECT_TOPICS = {
+  rappi: ['merchant operations', 'restaurant operations', 'restaurantes', 'orders', 'ordenes', 'churn', 'tablet', 'users and roles', 'usuarios y roles'],
   modyo: ['dxp', 'digital experience platform', 'design system', 'sistema de diseno', 'low code', 'micro frontend'],
   mibanco: ['onboarding', 'transactions', 'transacciones', 'payments', 'pagos', 'credit', 'credito', 'digital banking'],
   credicorp: ['corporate fx', 'foreign exchange', 'divisas', 'treasury', 'tesoreria', 'cambio', 'backoffice'],
@@ -139,6 +142,10 @@ const PROJECT_TOPICS = {
 }
 
 const PROJECT_ES = {
+  rappi: (() => {
+    const project = localizeContent('es', projects.find((item) => item.id === 'rappi'))
+    return { category: project.category, role: project.role, scope: project.scope, summary: project.summary, outcomes: project.outcomes }
+  })(),
   modyo: {
     category: 'plataforma de experiencia digital, sistema de diseño y desarrollo visual',
     role: 'diseñador de producto enfocado en investigación y sistemas de diseño',
@@ -177,6 +184,7 @@ const PROJECT_ES = {
 }
 
 const DELIVERY_ES = {
+  rappi: { team: 'diseño de producto, desarrollo y QA', duration: 'trabajo continuo desde 2025' },
   modyo: { team: 'ingeniería, producto, marketing y QA', duration: 'una colaboración integral de plataforma' },
   mibanco: { team: 'producto, investigación, desarrollo, QA y marca', duration: 'un proyecto de principio a fin' },
   credicorp: { team: 'clientes corporativos, tesorería, operaciones e ingeniería', duration: 'una iniciativa de plataforma' },
@@ -352,11 +360,11 @@ function titleOf(project) {
 
 function metricText(metric, language) {
   if (language !== 'es') return `${metric.value} ${metric.label} (${metric.detail})`
-  return `${translate(language, metric.value)} ${METRIC_LABELS_ES[metric.label] || metric.label} (${METRIC_DETAILS_ES[metric.detail] || metric.detail})`
+  return `${translate(language, metric.value)} ${METRIC_LABELS_ES[metric.label] || translate(language, metric.label)} (${METRIC_DETAILS_ES[metric.detail] || translate(language, metric.detail)})`
 }
 
 function metricShortText(metric, language) {
-  const label = language === 'es' ? METRIC_LABELS_ES[metric.label] || metric.label : metric.label
+  const label = language === 'es' ? METRIC_LABELS_ES[metric.label] || translate(language, metric.label) : metric.label
   return `${translate(language, metric.value)} ${label}`
 }
 
@@ -526,19 +534,19 @@ function answerProject(project, intent, language, confidence = 'high', standalon
       overview: `${copy.summary}\n\nSu rol fue ${copy.role} y el alcance incluyó ${copy.scope}.`,
       role: `En ${name}, Mateo trabajó como ${copy.role}. Su responsabilidad cubrió ${copy.scope}.`,
       scope: `El trabajo de Mateo en ${name} abarcó ${copy.scope}. ${copy.summary}`,
-      outcomes: `${project.outcomesLabel ? 'Los entregables de diseño documentados' : 'Los resultados documentados'} para ${name} son:\n${bulletList(copy.outcomes)}`,
-      process: `El proceso de ${name} conectó investigación, diseño, validación e implementación. El caso documenta ${joinList(processTitles(project, language), language)}.`,
+      outcomes: `${project.outcomesLabel && !project.metrics.length ? 'Los entregables de diseño documentados' : 'Los resultados documentados'} para ${name} son:\n${bulletList(copy.outcomes)}`,
+      process: project.processSummary ? translate(language, project.processSummary) : `El proceso de ${name} conectó investigación, diseño, validación e implementación. El caso documenta ${joinList(processTitles(project, language), language)}.`,
       delivery: `Mateo trabajó en ${name} junto con ${delivery.team}. El portafolio describe la duración como ${delivery.duration}.`,
     }
     return makeAnswer({ text: answers[intent], language, projectIds: [project.id], confidence, standalone })
   }
 
   const answers = {
-    overview: `${toThirdPerson(project.intro)}\n\nMateo worked as ${project.role}. The scope covered ${lowerFirst(project.scope)}.`,
+    overview: `${toThirdPerson(project.summary || project.intro)}\n\nMateo worked as ${project.role}. The scope covered ${lowerFirst(project.scope)}.`,
     role: `On ${name}, Mateo worked as ${project.role}. His responsibility covered ${lowerFirst(project.scope)}.`,
     scope: `Mateo's work on ${name} covered ${lowerFirst(project.scope)}. ${toThirdPerson(project.intro)}`,
-    outcomes: `The documented ${project.outcomesLabel ? 'design deliverables' : 'outcomes'} for ${name} are:\n${bulletList(project.outcomes)}`,
-    process: `The ${name} process connected research, design, validation and implementation. The case documents ${joinList(processTitles(project, language), language)}.`,
+    outcomes: `The documented ${project.outcomesLabel && !project.metrics.length ? 'design deliverables' : 'outcomes'} for ${name} are:\n${bulletList(project.outcomes)}`,
+    process: project.processSummary || `The ${name} process connected research, design, validation and implementation. The case documents ${joinList(processTitles(project, language), language)}.`,
     delivery: `Mateo worked on ${name} with ${project.team.toLowerCase()}. The portfolio describes the duration as ${project.duration.toLowerCase()}.`,
   }
   return makeAnswer({ text: answers[intent], language, projectIds: [project.id], confidence, standalone })
@@ -609,7 +617,7 @@ function answerProjectSet(matchedProjects, language, intent = 'overview', { lead
 
 function answerAllProjects(language, financialOnly = false) {
   const selected = financialOnly
-    ? projects.filter((project) => project.id !== 'modyo')
+    ? projects.filter((project) => !['modyo', 'rappi'].includes(project.id))
     : projects
   const lines = selected.map((project) => {
     const category = language === 'es' ? PROJECT_ES[project.id].category : project.category
@@ -625,12 +633,12 @@ function answerAllProjects(language, financialOnly = false) {
         ? `${
             financialOnly
               ? 'Mateo ha diseñado productos financieros en cuatro contextos:'
-              : 'El portafolio presenta cinco casos de producto:'
+              : `El portafolio presenta ${selected.length} casos de producto:`
           }\n${bulletList(lines)}`
         : `${
             financialOnly
               ? 'Mateo has designed financial products across four contexts:'
-              : 'The portfolio presents five product cases:'
+              : `The portfolio presents ${selected.length} product cases:`
           }\n${bulletList(lines)}`,
   })
 }
@@ -662,34 +670,15 @@ function answerUnsupported(context, language) {
 }
 
 function answerCurrentRole(intent, language, { standalone = false, confidence = 'high' } = {}) {
-  const currentExperience = experience.find((item) => item.org === profile.currentRole.company)
-  const detail = translate(language, currentExperience.summary)
-  const role = language === 'es'
-    ? `En Rappi, Mateo trabaja como ${CURRENT_ROLE_ES.role}. Su alcance cubre ${lowerFirst(CURRENT_ROLE_ES.scope)} ${detail}`
-    : `At Rappi, Mateo works as ${profile.currentRole.role}. His scope covers ${profile.currentRole.scope} ${detail}`
-  const missing = {
-    es: ['outcomes', 'unsupported-metrics'].includes(intent)
-      ? 'El portafolio aún no publica métricas ni resultados medidos de su trabajo en Rappi.'
-      : 'El portafolio aún no publica un caso de Rappi con el proceso de diseño o el equipo detallados.',
-    en: ['outcomes', 'unsupported-metrics'].includes(intent)
-      ? 'The portfolio does not yet publish metrics or measured outcomes for his work at Rappi.'
-      : 'The portfolio does not yet publish a Rappi case with a detailed design process or team.',
-  }
-  const limited = ['outcomes', 'unsupported-metrics', 'process', 'delivery'].includes(intent)
-  return makeAnswer({ language, projectIds: ['rappi'], kind: 'current-role', standalone, confidence,
-    text: limited ? `${missing[language]} ${role}` : role })
+  return answerProject(projectById('rappi'), intent, language, confidence, standalone)
 }
 
 function answerNamedEntities(ids, intent, language, options = {}) {
   const selected = projects.filter((project) => ids.includes(project.id))
-  const includeCurrent = ids.includes('rappi')
-  if (!selected.length) return includeCurrent ? answerCurrentRole(intent, language, options) : null
-  const answer = selected.length === 1
+  if (!selected.length) return null
+  return selected.length === 1
     ? answerProject(selected[0], intent, language, options.confidence || 'high', options.standalone || false)
     : answerProjectSet(selected, language, intent, options)
-  if (!includeCurrent) return answer
-  return { ...answer, projectIds: [...answer.projectIds, 'rappi'],
-    text: `${answer.text}\n\n${answerCurrentRole(intent, language).text}` }
 }
 
 function hasUnresolvedEmployer(context) {
@@ -807,7 +796,7 @@ export function answerPortfolioQuestion(question, { projectIds: contextualProjec
   }
 
   if (matchesAny(context, ['design system', 'design systems', 'component system', 'sistema de diseño', 'sistemas de diseño', 'sistema de componentes'])) {
-    return answerProject(projectById('modyo'), 'scope', language, 'high', true)
+    return answerProjectSet([projectById('rappi'), projectById('modyo')], language, 'scope', { standalone: true })
   }
 
   if (matchesAny(context, ['clients', 'companies', 'organizations', 'worked with', 'clientes', 'empresas', 'organizaciones', 'trabajado con'])) {

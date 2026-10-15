@@ -1,3 +1,5 @@
+import { rappiRoleScope } from './rappi.js'
+
 export const profile = {
   name: 'Mateo Espinosa',
   location: 'Bogotá, Colombia',
@@ -13,7 +15,7 @@ export const profile = {
     role: 'Product Designer · Merchants',
     tenure: '2025 – present',
     scope:
-      'Restaurants and Mi Tienda, including the unification of Portal Partners and Portal Aliados using Rappi DS.',
+      rappiRoleScope,
   },
   design:
     'Product strategy, financial products, merchant operations, onboarding, transactions, credit products, design systems and complex B2B workflows.',

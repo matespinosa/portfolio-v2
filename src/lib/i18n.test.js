@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import spanish from '../data/translationsEs.json' with { type: 'json' }
+import baseSpanish from '../data/translationsEs.json' with { type: 'json' }
+import { rappiTranslationsEs } from '../data/rappi.js'
 import { projects, experience, selectedClients } from '../data/projects.js'
 import { profile } from '../data/profile.js'
 import { LANGUAGE_STORAGE_KEY, localeFor, readLanguage } from '../data/language.js'
 import { localizeContent, translate } from './i18n.js'
+
+const spanish = { ...baseSpanish, ...rappiTranslationsEs }
 
 test('keeps the selected language and handles unavailable or invalid storage', () => {
   assert.equal(readLanguage({ getItem: (key) => key === LANGUAGE_STORAGE_KEY ? 'es' : null }), 'es')
@@ -24,8 +27,8 @@ test('translates templates without changing inserted names or visitor content', 
   }
 })
 
-test('covers every descriptive field of the five cases, career and profile', () => {
-  const fields = new Set(['title', 'name', 'category', 'role', 'scope', 'team', 'duration', 'intro', 'body', 'bullets', 'label', 'detail', 'alt', 'outcomes', 'metricsNote', 'outcomesLabel', 'summary', 'context', 'span', 'tenure', 'design', 'frontend', 'aiPractice'])
+test('covers every descriptive field of the six cases, career and profile', () => {
+  const fields = new Set(['title', 'name', 'category', 'role', 'scope', 'team', 'duration', 'intro', 'body', 'bullets', 'label', 'detail', 'alt', 'outcomes', 'metricsNote', 'outcomesLabel', 'summary', 'context', 'span', 'tenure', 'design', 'frontend', 'aiPractice', 'processSummary', 'metricsSource', 'screensNote'])
   const missing = []
   function check(value, key) {
     if (typeof value === 'string' && fields.has(key) && /[a-zA-Z]/.test(value)) {

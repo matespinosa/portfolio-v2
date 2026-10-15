@@ -1,8 +1,11 @@
+import { rappiProject, rappiExperienceSummary } from './rappi.js'
+
 export const projects = [
+  rappiProject,
   {
     id: 'modyo',
     sourceUrl: 'https://mateo-espinosa.framer.website/projects/modyo-platform',
-    index: '01',
+    index: '02',
     title: 'Modyo Platform',
     client: 'Modyo',
     name: 'Modyo Platform',
@@ -89,7 +92,7 @@ export const projects = [
   {
     id: 'mibanco',
     sourceUrl: 'https://mateo-espinosa.framer.website/projects/mibanco',
-    index: '02',
+    index: '03',
     title: 'Web app transaction — MiBanco',
     client: 'MiBanco',
     name: 'Web app transaction',
@@ -166,7 +169,7 @@ export const projects = [
   {
     id: 'credicorp',
     sourceUrl: 'https://mateo-espinosa.framer.website/projects/divisas-cc',
-    index: '03',
+    index: '04',
     title: 'Credicorp Capital — Corporate FX Module',
     client: 'Credicorp Capital',
     name: 'Corporate FX Module',
@@ -249,7 +252,7 @@ export const projects = [
   {
     id: 'dando',
     sourceUrl: 'https://mateo-espinosa.framer.website/projects/dando',
-    index: '04',
+    index: '05',
     title: 'Dando by CFG',
     client: 'CFG Partners',
     name: 'Dando by CFG',
@@ -349,7 +352,7 @@ export const projects = [
   },
   {
     id: 'kapital',
-    index: '05',
+    index: '06',
     title: 'Kapital Colombia — Factoring end to end',
     client: 'Kapital Colombia',
     name: 'Factoring end to end',
@@ -456,7 +459,7 @@ export const experience = [
     org: 'Rappi',
     role: 'Product Designer · Merchants',
     span: '2025 – present',
-    summary: 'Merchant onboarding and operations across menus, promotions, ads and business settings. AI tools support live prototypes and design system work.',
+    summary: rappiExperienceSummary,
   },
   {
     org: 'Kapital Bank',

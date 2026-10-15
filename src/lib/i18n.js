@@ -1,8 +1,11 @@
 import spanish from '../data/translationsEs.json' with { type: 'json' }
 import { normalizeLanguage } from '../data/language.js'
+import { rappiTranslationsEs } from '../data/rappi.js'
+
+const translations = { ...spanish, ...rappiTranslationsEs }
 
 export function translate(language, text, values = {}) {
-  const template = normalizeLanguage(language) === 'es' && Object.hasOwn(spanish, text) ? spanish[text] : text
+  const template = normalizeLanguage(language) === 'es' && Object.hasOwn(translations, text) ? translations[text] : text
   return template.replace(/\{(\w+)\}/g, (match, key) => values[key] ?? match)
 }
 
